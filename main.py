@@ -1,6 +1,9 @@
 from problem import Problem, TestFiles
 
-p = Problem.from_file(TestFiles.test_a)
-p.insert_test_sol()
-p.visualize()
+testfile = TestFiles.test_c
+
+p = Problem.from_file(testfile)
+p.hillclimbing()
+print(p.total_score)
+# p.visualize(testfile)
 
