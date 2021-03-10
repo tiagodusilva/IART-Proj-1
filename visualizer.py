@@ -5,96 +5,68 @@ import matplotlib.patheffects as path_effects
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle
 
-plt.style.use('seaborn-paper')
 
-# Input data
-n_books, n_libraries, deadline = 6, 2, 7
-scores = np.array([1, 2, 3, 6, 5, 4])
-
-library = np.array([
-    [5, 2, 2], # Library 0 has 5 books, the sign up process takes 2 days, and the library can ship 2 books per day.
-    [4, 3, 1]
-])
-
-book = np.array([
-    [0, 1, 2, 3, 4], # The books in library 0 are: book0, book1, book2, book3, and book4.
-    [3, 2, 5, 0]
-], dtype=object)
-
-
-
-# Output data
-libraries_used = 2 # Two libraries will be signed up for scanning.
-signups = np.array([
-    [1, 3], # The first library to do the signup process is library 1.
-            # After the sign up process it will send 3 books for scanning
-    [0, 5]
-])
-sent = np.array([
-    [5, 2, 3], # Library 1 will send book 5, book 2, and book 3 in order.
-    [0, 1, 2, 3, 4]
-], dtype=object)
-
-
-def plot_result(n_books, n_libraries, deadline, scores, library, book, signups, sent):
-
-    # Create figure and axes
-    fig = plt.figure("Book Scanning")
-    ax = fig.subplots(1)
-    ax.set_title("Hashcode Docs Example")
-
-    time = 0
-    height = 0
-
-    norm_scores = scores / np.average(scores)
-
-    plot_deadline(ax, deadline)
-    cmap = plt.get_cmap("viridis")
-
-    y_ticks = [0]
-
-    for sign, books in zip(signups, sent):
-        l = sign[0]
-        signup_time = library[l][1]
-        parallel_books = library[l][2]
-        library_height = min((parallel_books, len(books)))
-        y_ticks.append(y_ticks[-1] + library_height)
-        
-        plot_signup(ax, l, time, height, library_height, signup_time)
-        time += signup_time
-        
-        booktime = time
-        bpd = 0 # Books per day
-        for b in books:
-            plot_book(ax, b, booktime, height + bpd, c=cmap(norm_scores[b]))
-            bpd += 1
-            if (bpd >= parallel_books):
-                bpd = 0
-                booktime += 1
-
-        height += library_height
-
-    ax.set_xticks(np.arange(0, deadline + 1, 1))
-    ax.set_yticks(y_ticks)
-    ax.grid(axis="x", alpha=.5, ls='--')
-    ax.grid(axis="y", alpha=.5, ls='-')
-
-    ax.set_xlim(-1, deadline + 1)
-    ax.set_ylim(0, height)
-
-    ax.set_xlabel("Days")
+def plot_result(problem):
     
-    # ADD COLORMAP
-    from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
-    ax_divider = make_axes_locatable(ax)
-    # Add an axes to the right of the main axes.
-    cax = ax_divider.append_axes("right", size="5%", pad="5%", )
-    norm = matplotlib.colors.Normalize(vmin=min(scores), vmax=max(scores))
-    fig.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap), cax=cax, orientation='vertical')
-    cax.set_ylabel("Score")
-    
+    with plt.style.context('seaborn-paper'):
 
-    return fig, ax
+        # Create figure and axes
+        fig = plt.figure("Book Scanning")
+        ax = fig.subplots(1)
+        ax.set_title("Hashcode Docs Example")
+
+        time = 0
+        height = 0
+
+        norm_scores = problem.scores / np.average(problem.scores)
+
+        plot_deadline(ax, problem.deadline)
+        cmap = plt.get_cmap("viridis")
+
+        y_ticks = [0]
+
+        for sign, books in zip(problem.signups, problem.sent):
+            l = sign[0]
+            signup_time = problem.libraries[l][1]
+            parallel_books = problem.libraries[l][2]
+            library_height = min((parallel_books, len(books)))
+            y_ticks.append(y_ticks[-1] + library_height)
+            
+            plot_signup(ax, l, time, height, library_height, signup_time)
+            time += signup_time
+            
+            booktime = time
+            bpd = 0 # Books per day
+            for b in books:
+                plot_book(ax, b, booktime, height + bpd, c=cmap(norm_scores[b]))
+                bpd += 1
+                if (bpd >= parallel_books):
+                    bpd = 0
+                    booktime += 1
+
+            height += library_height
+
+        ax.set_xticks(np.arange(0, problem.deadline + 1, 1))
+        ax.set_yticks(y_ticks)
+        ax.grid(axis="x", alpha=.5, ls='--')
+        ax.grid(axis="y", alpha=.5, ls='-')
+
+        ax.set_xlim(-1, problem.deadline + 1)
+        ax.set_ylim(0, height)
+
+        ax.set_xlabel("Days")
+        
+        # ADD COLORMAP
+        from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
+        ax_divider = make_axes_locatable(ax)
+        # Add an axes to the right of the main axes.
+        cax = ax_divider.append_axes("right", size="5%", pad="5%", )
+        norm = matplotlib.colors.Normalize(vmin=min(problem.scores), vmax=max(problem.scores))
+        fig.colorbar(matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap), cax=cax, orientation='vertical')
+        cax.set_ylabel("Score")
+        
+
+        return fig, ax
 
 
 
@@ -112,10 +84,3 @@ def plot_signup(ax, library, day, y, library_height, duration, h=0.25):
 
 def plot_deadline(ax, deadline):
     ax.vlines(deadline, 0, 100, colors='r')
-
-
-
-fig, ax = plot_result(n_books, n_libraries, deadline, scores, library, book, signups, sent)
-plt.show()
-
-# fig.savefig("Book Scanning Demo.png")
