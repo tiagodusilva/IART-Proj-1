@@ -82,7 +82,7 @@ class Problem:
         return sum((self.aux_scores[i] for i in self.books[index])) / self.libraries[index][Problem.LIB_SIGNUP]
 
     def next_library(self):
-        return max((i for i in range(self.n_libraries) if i not in self.signups), key=self.eval_library)
+        return max((i for i in range(self.n_libraries)), key=self.eval_library)
 
     def hillclimbing(self):
         self.aux_scores = np.copy(self.scores)
@@ -92,7 +92,10 @@ class Problem:
         self.total_score = 0
 
         t = 0
-        while t < self.deadline and len(self.signups) < self.n_libraries:
+        
+        n_libraries_copy = self.n_libraries
+        
+        while t < self.deadline and len(self.signups) < n_libraries_copy:
             nextLib = self.next_library()
             lib = self.libraries[nextLib]
             self.signups.append(nextLib)
@@ -116,3 +119,7 @@ class Problem:
             self.total_score += lib_score
 
             self.sent.append(np.array(tmp_l))
+            
+            self.n_libraries = self.n_libraries - 1
+            
+            np.delete(self.libraries, nextLib)
