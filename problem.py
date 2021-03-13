@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import itertools
 from visualizer import plot_result
 
@@ -20,7 +19,7 @@ class Problem:
     LIB_SIGNUP = 1
     LIB_PROCESSING = 2
 
-    def __init__(self, n_books, n_libraries, deadline, scores, libraries, books):
+    def __init__(self, n_books, n_libraries, deadline, scores, libraries, books, all_books):
         super().__init__()
         # Input
         self.n_books = n_books
@@ -29,11 +28,14 @@ class Problem:
         self.scores = scores
         self.libraries = libraries
         self.books = books
+        self.all_books = all_books
         
         # Helpers
+        self.pre_proc_scores = np.empty(n_libraries, dtype=float)
         self.aux_scores = scores
         self.signed_libraries = set()
         self.scanned_books = set()
+        self.diff_books_amount = None
 
         # Solution
         self.libraries_used = None
@@ -49,13 +51,15 @@ class Problem:
 
             libraries = np.empty((n_libraries, 3), dtype=int)
             books = np.empty(n_libraries, dtype=object)
+            all_books = np.empty(0, dtype=int)
 
             for i in range(n_libraries):
                 libraries[i] = np.array([int(elem) for elem in f.readline().split()])
                 books[i] = np.array([int(elem) for elem in f.readline().split()])
+                all_books = np.append(all_books,books[i])
+                
 
-
-            return Problem(book, n_libraries, deadline, scores, libraries, books)
+            return Problem(book, n_libraries, deadline, scores, libraries, books, all_books)
     
     def insert_test_sol(self):
         # Output data
@@ -79,10 +83,30 @@ class Problem:
         return self.aux_scores[book]
 
     def eval_library(self, index):
-        return sum((self.aux_scores[i] for i in self.books[index])) / self.libraries[index][Problem.LIB_SIGNUP]
+        return sum(((self.aux_scores[i]*(1-self.diff_books_amount[i]/self.n_libraries)) for i in self.books[index])) / self.libraries[index][Problem.LIB_SIGNUP]
+    
+    
+    #can be optimized
+    def pre_proc(self):
+        #gets the number  of times each book appears
+        self.diff_books_amount = np.empty(len(self.aux_scores),dtype=int)
 
-    def next_library(self):
-        return max((i for i in range(self.n_libraries)), key=self.eval_library)
+        for i in range(len(self.aux_scores)):
+            self.diff_books_amount[i] = np.count_nonzero(self.all_books == i)
+        
+        
+        for i in range(self.n_libraries):
+            self.pre_proc_scores[i] = self.eval_library(i)
+
+            
+
+    def next_library(self, t):
+        while(True):
+            bestIndex = np.where(self.pre_proc_scores == np.amax(self.pre_proc_scores))[0][0]
+            if(self.libraries[bestIndex][Problem.LIB_SIGNUP] + t < self.deadline or self.pre_proc_scores[bestIndex]==-1):
+                return bestIndex
+            else:
+                self.pre_proc_scores[bestIndex] = -1;
 
     def hillclimbing(self):
         self.aux_scores = np.copy(self.scores)
@@ -90,16 +114,19 @@ class Problem:
         self.signups = []
         self.sent = []
         self.total_score = 0
+        self.pre_proc()
 
         t = 0
         
-        n_libraries_copy = self.n_libraries
-        
-        while t < self.deadline and len(self.signups) < n_libraries_copy:
-            nextLib = self.next_library()
+        while t < self.deadline and len(self.signups) < self.n_libraries:
+            nextLib = self.next_library(t)
             lib = self.libraries[nextLib]
+            
             self.signups.append(nextLib)
             t += lib[Problem.LIB_SIGNUP]
+            
+            if(self.pre_proc_scores[nextLib] == -1):
+                break
 
             tleft = max((self.deadline - t, 0))
             books_scanned = lib[Problem.LIB_BOOKS]
@@ -116,10 +143,8 @@ class Problem:
                 if (self.aux_scores[b] > 0):
                     tmp_l.append(b)
                 self.aux_scores[b] = 0
+                
             self.total_score += lib_score
-
             self.sent.append(np.array(tmp_l))
             
-            self.n_libraries = self.n_libraries - 1
-            
-            np.delete(self.libraries, nextLib)
+            self.pre_proc_scores[nextLib] = -1
