@@ -33,8 +33,6 @@ class Problem:
         # Helpers
         self.pre_proc_scores = np.empty(n_libraries, dtype=float)
         self.aux_scores = scores
-        self.signed_libraries = set()
-        self.scanned_books = set()
         self.diff_books_amount = None
 
         # Solution
@@ -78,13 +76,26 @@ class Problem:
         fig, ax = plot_result(self, testfile)
         # fig.savefig("uwu.png")
 
+    def dump_solution(self, filename):
+        outfile = open(filename, mode="w")
+
+        outfile.write(f"{self.libraries_used}\n")
+
+        for i in range(self.libraries_used):
+            outfile.write(f"{self.signups[i]} {len(self.sent[i])}\n")
+            for b in self.sent[i]:
+                outfile.write(f"{b} ")
+            outfile.write(f"\n")
+
+        outfile.close()
+
 
     def book_aux_score(self, book):
         return self.aux_scores[book]
 
     def eval_library(self, index):
         return sum(((self.aux_scores[i]*(1-self.diff_books_amount[i]/self.n_libraries)) for i in self.books[index])) / self.libraries[index][Problem.LIB_SIGNUP]
-    
+
     
     #can be optimized
     def pre_proc(self):
@@ -106,7 +117,7 @@ class Problem:
             if(self.libraries[bestIndex][Problem.LIB_SIGNUP] + t < self.deadline or self.pre_proc_scores[bestIndex]==-1):
                 return bestIndex
             else:
-                self.pre_proc_scores[bestIndex] = -1;
+                self.pre_proc_scores[bestIndex] = -1
 
     def hillclimbing(self):
         self.aux_scores = np.copy(self.scores)
@@ -122,11 +133,11 @@ class Problem:
             nextLib = self.next_library(t)
             lib = self.libraries[nextLib]
             
-            self.signups.append(nextLib)
-            t += lib[Problem.LIB_SIGNUP]
-            
             if(self.pre_proc_scores[nextLib] == -1):
                 break
+
+            self.signups.append(nextLib)
+            t += lib[Problem.LIB_SIGNUP]
 
             tleft = max((self.deadline - t, 0))
             books_scanned = lib[Problem.LIB_BOOKS]
@@ -148,3 +159,5 @@ class Problem:
             self.sent.append(np.array(tmp_l))
             
             self.pre_proc_scores[nextLib] = -1
+        
+        self.libraries_used = len(self.signups)

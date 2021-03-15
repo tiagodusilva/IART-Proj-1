@@ -5,7 +5,6 @@ import matplotlib.patheffects as path_effects
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Rectangle
 
-
 def plot_result(problem, name="Hashcode Docs Example"):
     
     with plt.style.context('seaborn-paper'):
@@ -23,31 +22,18 @@ def plot_result(problem, name="Hashcode Docs Example"):
         plot_deadline(ax, problem.deadline)
         cmap = plt.get_cmap("viridis")
 
-        y_ticks = [0]
-
-        for sign, books in zip(problem.signups, problem.sent):
-            l = sign
-            signup_time = problem.libraries[l][1]
-            parallel_books = problem.libraries[l][2]
-            library_height = min((parallel_books, len(books)))
-            y_ticks.append(y_ticks[-1] + library_height)
+        for lib, books in zip(problem.signups, problem.sent):
+            signup_time = problem.libraries[lib][1]
             
-            plot_signup(ax, l, time, height, library_height, signup_time)
+            plot_signup(ax, lib, time, height, 1, signup_time)
             time += signup_time
             
-            booktime = time
-            bpd = 0 # Books per day
-            for b in books:
-                plot_book(ax, b, booktime, height + bpd, c=cmap(norm_scores[b]))
-                bpd += 1
-                if (bpd >= parallel_books):
-                    bpd = 0
-                    booktime += 1
+            plot_book(ax, time, height, d=len(books) / problem.libraries[lib][2], c=cmap(0.5))
 
-            height += library_height
+            height += 1
 
         ax.set_xticks(np.arange(0, problem.deadline + 1, 1))
-        ax.set_yticks(y_ticks)
+        ax.set_yticks(np.arange(0, height, 1))
         ax.grid(axis="x", alpha=.5, ls='--')
         ax.grid(axis="y", alpha=.5, ls='-')
 
@@ -72,7 +58,7 @@ def plot_result(problem, name="Hashcode Docs Example"):
 
 
 
-def plot_book(ax, book, day, y, d=0.5, h=0.5, c="pink"):
+def plot_book(ax, day, y, d=0.5, h=0.5, c="pink"):
     rect = Rectangle((day + 0.25, y + 0.5 - h / 2), d, h, facecolor=c, edgecolor='k', lw=0.5)
     ax.add_patch(rect)
     # text = ax.text(day + 0.5, y + 0.5, book, ha="center", va="center", c="w", clip_on=True)
