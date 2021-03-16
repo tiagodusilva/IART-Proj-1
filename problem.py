@@ -1,6 +1,5 @@
-import itertools
-# from visualizer import plot_result
-
+import random
+from math import exp
 
 class TestFiles:
     test_a = "test/a_example.txt"
@@ -18,12 +17,23 @@ class Library:
         self.signup = signup
         self.processing = processing
         self.books = None
+        self.scanned = None
+    
+    def __str__(self):
+        return str(self.index)
+    
+    def __repr__(self):
+        return str(self.index)
 
     def setIndex(self, index):
         self.index = index
     
     def set_books(self, books):
         self.books = books
+    
+    def set_scanned(self, scanned):
+        self.scanned = scanned
+
 
 
 class Problem:
@@ -42,8 +52,11 @@ class Problem:
         self.scores = scores
         self.libraries = libraries
         self.books = books
+
+        self.unused_libraries = []
         self.remaining_books = all_books
         self.scanned_books = set()
+        self.time_left = None
 
         for i in range(len(self.books)):
             self.books[i].sort(key=self.get_book_score, reverse=True)
@@ -57,6 +70,9 @@ class Problem:
         self.sent = []
         self.total_score = None
     
+        # Methods
+        self.operations = []
+
 
     @staticmethod
     def from_file(filename):
@@ -91,6 +107,9 @@ class Problem:
             outfile.write(f"\n")
 
         outfile.close()
+    
+    def get_unused_libraries(self):
+        self.unused_libraries = [lib for lib in self.libraries if lib not in self.signups]
 
 
     def eval_libs(self):
@@ -118,7 +137,8 @@ class Problem:
             t += curLib.signup
             if t >= self.deadline:
                 break
-
+            
+            self.time_left = self.deadline - t
             self.signups.append(curLib)
             
             tleft = max((self.deadline - t, 0))
@@ -133,14 +153,88 @@ class Problem:
                     books_scanned.add(book)
                     n_books_scanned += 1
                     total_score += self.scores[book]
+            curLib.set_scanned(books_scanned)
             self.sent.append(books_scanned)
 
             self.remaining_books.difference_update(books_scanned)
-
-            self.scanned_books = self.scanned_books.union(books_scanned)
+            self.scanned_books.update(books_scanned)
 
             curLibIndex += 1
 
         self.libraries_used = curLibIndex
         self.total_score = total_score
+
+        chosen_lib_books = set()
+        for l in self.signups:
+            chosen_lib_books.update(l.books)
+        self.remaining_books.intersection_update(chosen_lib_books)
+
+        self.get_unused_libraries()
+
+    # def operator_switch_library(self):
+    #     lib = random.choice(self.unused_libraries)
+
+    #     try:
+    #         lib_to_replace = random.choice((l for l in self.signups if lib.signup <= self.time_left + l.signup))
+    #     except IndexError:
+    #         return None
+
+    def undo(self):
+        op = self.operations.pop()
+
+        if op[0] == 'sb':
+            # Switch book
+            _, lib, book, book_to_replace = op
+
+            # print("It's rewind time")
+
+            lib.scanned.add(book_to_replace)
+            lib.scanned.remove(book)
+            self.remaining_books.add(book)
+            self.remaining_books.remove(book_to_replace)
+            self.total_score -= self.scores[book] - self.scores[book_to_replace]
+        else:
+            raise RuntimeError()
+
+    def operator_switch_book(self):
+        book = random.choice(tuple(self.remaining_books))
+
+        try:
+            lib = random.choice([l for l in self.signups if book in l.books])
+        except:
+            return False
+        
+        # TODO: Implement trying to readd the book into another library
+        book_to_replace = random.choice(tuple(lib.scanned))
+        # print(book_to_replace)
+
+        lib.scanned.remove(book_to_replace)
+        lib.scanned.add(book)
+        self.remaining_books.add(book_to_replace)
+        self.remaining_books.remove(book)
+
+        self.total_score += self.scores[book] - self.scores[book_to_replace]
+        self.operations.append(("sb", lib, book, book_to_replace))
+
+        return True
+
+    def annealing(self):
+        
+        T = 20
+        while True:
+            if len(self.remaining_books) == 0:
+                return
+            T *= 0.9
+            old_score = self.total_score
+            while not self.operator_switch_book():
+                pass
+            delta = self.total_score - old_score
+            # Reversed conditions as we want to "fuck go back" as our "stay in the current state"
+            # if delta <= 0 and exp(delta / T) < random.uniform(0, 1):
+            #     self.undo()
+            if delta > 0:
+                print(f"BEST: {self.total_score}")
+                # print(self.sent)
+            elif exp(delta / T) < random.uniform(0, 1):
+                self.undo()
 
