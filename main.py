@@ -4,7 +4,7 @@ testfile = TestFiles.test_b
 
 p = Problem.from_file(testfile)
 p.hillclimbing_fast()
-print(p.total_score)
+print(f"Final Score: {p.total_score}")
 # p.visualize(testfile)
 p.dump_solution(testfile.replace("test/", "sol/"))
 

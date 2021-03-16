@@ -72,7 +72,7 @@ class Problem:
                 libraries.append(Library(i, *(int(elem) for elem in f.readline().split())))
                 books.append([int(elem) for elem in f.readline().split()])
                 libraries[i].set_books(books[-1])
-                all_books.union(books[-1])
+                all_books = all_books.union(books[-1])
 
             return Problem(book, n_libraries, deadline, scores, libraries, books, all_books)
 
@@ -136,6 +136,7 @@ class Problem:
             self.sent.append(books_scanned)
 
             self.remaining_books.difference_update(books_scanned)
+
             self.scanned_books = self.scanned_books.union(books_scanned)
 
             curLibIndex += 1
