@@ -196,17 +196,24 @@ class Problem:
         else:
             raise RuntimeError()
     
-    def operator_switch_book(self):
-        book = random.choice(tuple(self.remaining_books))
+    def apply_operator(self, op):
+        if op[0] == 'sb':
+            self.operator_switch_book(*op[1:])
+        else:
+            raise RuntimeError()
+    
+    def operator_switch_book(self, lib=None, book=None, book_to_replace=None):
+        if book == None or lib == None or book_to_replace == None:
+            book = random.choice(tuple(self.remaining_books))
 
-        try:
-            lib = random.choice([l for l in self.signups if book in l.books])
-        except:
-            return False
-        
-        # TODO: Implement trying to readd the book into another library
-        book_to_replace = random.choice(tuple(lib.scanned))
-        # print(book_to_replace)
+            try:
+                lib = random.choice([l for l in self.signups if book in l.books])
+            except:
+                return False
+            
+            # TODO: Implement trying to readd the book into another library
+            book_to_replace = random.choice(tuple(lib.scanned))
+
 
         lib.scanned.remove(book_to_replace)
         lib.scanned.add(book)
@@ -268,6 +275,7 @@ class Problem:
 
             if op_score > self.total_score:
                 # Go to state
+                self.apply_operator(op)
                 print("UWU UWU UWU UWU")
                 pass
             else:
