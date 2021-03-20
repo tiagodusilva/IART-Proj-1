@@ -116,23 +116,38 @@ class Problem:
         self.lib_evals = [self.eval_library_index(l.index) for l in self.libraries]
 
     def eval_library_index(self, index):
-        return sum((self.scores[i] for i in self.books[index])) / self.libraries[index].signup
+        return sum((self.scores[i] for i in self.books[index] if i not in self.scanned_books)) / self.libraries[index].signup
 
     def eval_library(self, library):
         return self.eval_library_index(library.index)
 
-    def hillclimbing_fast(self):
+    def hillclimbing(self, reavaluations = None):
         self.signups = []
         self.sent = []
 
+        self.scanned_books = set()
+
         self.eval_libs()
+        if reavaluations == 0:
+            reavaluations = None
+        if reavaluations != None:
+            t_between_recalculations = self.deadline // (reavaluations + 1)
+            t_recalculate = t_between_recalculations
 
         libs = sorted(self.libraries, key=self.eval_library, reverse=True)
         total_score = 0
 
         t = 0
         curLibIndex = 0
-        while curLibIndex < self.n_libraries:
+        while curLibIndex < len(libs):
+
+            if reavaluations != None and t >= t_recalculate:
+                t_recalculate += t_between_recalculations
+                self.eval_libs()
+                libs = sorted((l for l in self.libraries if l not in self.signups), key=self.eval_library, reverse=True)
+                curLibIndex = 0
+
+
             curLib = libs[curLibIndex]
             t += curLib.signup
             if t >= self.deadline:
