@@ -195,7 +195,7 @@ class Problem:
             self.total_score -= self.scores[book] - self.scores[book_to_replace]
         else:
             raise RuntimeError()
-
+    
     def operator_switch_book(self):
         book = random.choice(tuple(self.remaining_books))
 
@@ -224,7 +224,7 @@ class Problem:
         while True:
             if len(self.remaining_books) == 0:
                 return
-            T *= 0.9
+            T *= 0.99
             old_score = self.total_score
             while not self.operator_switch_book():
                 pass
@@ -238,3 +238,43 @@ class Problem:
             elif exp(delta / T) < random.uniform(0, 1):
                 self.undo()
 
+
+
+    def get_best_operator(self):
+        best_op_score = -1
+        best_op = None
+
+        for book in self.remaining_books:
+            for lib in self.signups:
+                if book in lib.books:
+                    for book_to_replace in lib.scanned:
+                        op_score = self.total_score + self.scores[book] - self.scores[book_to_replace]
+                        # Pode dar asneira, check later
+                        if op_score > best_op_score and ("sb", lib, book, book_to_replace) not in self.tabu_list:
+                            best_op = ("sb", lib, book, book_to_replace)
+                            best_op_score = op_score
+
+        if best_op == None:
+            print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+
+        return best_op, best_op_score
+
+
+    def tabu_search(self):
+        self.tabu_list = []
+
+        while (True): # Stop condition
+            op, op_score = self.get_best_operator()
+
+            if op_score > self.total_score:
+                # Go to state
+                print("UWU UWU UWU UWU")
+                pass
+            else:
+                print("RRRRRREEEEEEEEEEEEEEE")
+            
+            self.tabu_list.append(op)
+            if len(self.tabu_list) > 100: # Max size of tabu list
+                del self.tabu_list[0]
+        
+        return self.total_score
