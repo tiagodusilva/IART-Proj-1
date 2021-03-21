@@ -1,7 +1,7 @@
+import sys
 from problem import Problem, TestFiles
-# from visualizer import plot_result
 
-testfile = TestFiles.test_d
+testfile = TestFiles.test_b
 
 print(f"DATASET: {testfile}")
 
@@ -15,6 +15,9 @@ print(f"Final Score: {p.total_score}")
 
 p.dump_solution(testfile.replace("test/", "sol/"))
 
-# fig, ax = plot_result(p, testfile)
-# fig.savefig("uwu.png", dpi=200)
+if len(sys.argv) > 1 and sys.argv[1].lower() == '-v':
+    from visualizer import plot_result
+    import matplotlib.pyplot as plt
 
+    fig, ax = plot_result(p, testfile, show=True)
+    # fig.savefig("uwu.png", dpi=200)

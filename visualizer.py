@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def plot_result(p, name="Hashcode Docs Example"):
+def plot_result(p, name="Hashcode Docs Example", show=False):
 
-    with plt.style.context('seaborn-paper'):
+    with plt.style.context('default'):
 
         # Create figure and axes
         fig = plt.figure("Book Scanning")
@@ -18,5 +18,8 @@ def plot_result(p, name="Hashcode Docs Example"):
         ax.legend(loc="upper right")
         ax.set_xlabel("Library Index")
         ax.set_ylabel("Score")
+
+        if show:
+            plt.show()
 
         return fig, ax
