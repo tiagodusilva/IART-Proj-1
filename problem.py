@@ -3,6 +3,9 @@ from math import exp
 from decorators import timer
 
 class TestFiles:
+    """
+    Enum of all test files
+    """
     test_a = "test/a_example.txt"
     test_b = "test/b_read_on.txt"
     test_c = "test/c_incunabula.txt"
@@ -11,6 +14,9 @@ class TestFiles:
     test_f = "test/f_libraries_of_the_world.txt"
 
 class Library:
+    """
+    Represents and links all the information about a certain library
+    """
 
     def __init__(self, index, n_books, signup, processing):
         self.index = index
@@ -39,10 +45,9 @@ class Library:
 
 class Problem:
 
-    # Library indexes
-    LIB_BOOKS = 0
-    LIB_SIGNUP = 1
-    LIB_PROCESSING = 2
+    """
+    Represents everything needed to represent and solve a book scanning problem
+    """
 
     def __init__(self, n_books, n_libraries, deadline, scores, libraries, books, all_books):
         super().__init__()
@@ -78,6 +83,9 @@ class Problem:
     @staticmethod
     @timer
     def from_file(filename):
+        """
+        Returns a new problem from a given input file
+        """
         with open(filename) as f:
             book, n_libraries, deadline = [int(elem) for elem in f.readline().split()]
             scores = list([int(elem) for elem in f.readline().split()])
@@ -95,9 +103,16 @@ class Problem:
             return Problem(book, n_libraries, deadline, scores, libraries, books, all_books)
 
     def get_book_score(self, book):
+        """
+        Returns the score of a given book
+        Used as a key for sorting
+        """
         return self.scores[book]
 
     def dump_solution(self, filename):
+        """
+        Dumps to a file the current solution in the format specified by the hashcode
+        """
         outfile = open(filename, mode="w")
 
         outfile.write(f"{self.libraries_used}\n")
@@ -111,20 +126,36 @@ class Problem:
         outfile.close()
     
     def get_unused_libraries(self):
+        """
+        Updates the list of unused libraries
+        """
         self.unused_libraries = [lib for lib in self.libraries if lib not in self.signups]
 
 
     def eval_libs(self):
+        """
+        Evaluates all the libraries
+        """
         self.lib_evals = [self.eval_library_index(l.index) for l in self.libraries]
 
     def eval_library_index(self, index):
+        """
+        Evaluates the library with a given index
+        """
         return sum((self.scores[i] for i in self.books[index] if i not in self.scanned_books)) / self.libraries[index].signup
 
     def eval_library(self, library):
+        """
+        Evaluates a given library
+        """
         return self.eval_library_index(library.index)
 
     @timer
     def hillclimbing(self, reavaluations = None):
+        """
+        Performs the hillclimbing algorithm using steepest ascent
+        The reavaluations parameter defines how many times we should recalculate the scores of every library
+        """
         self.signups = []
         self.sent = []
 
@@ -200,6 +231,9 @@ class Problem:
     #         return None
 
     def undo(self):
+        """
+        Undoes the last operation applied
+        """
         op = self.operations.pop()
 
         if op[0] == 'sb':
@@ -217,12 +251,19 @@ class Problem:
             raise RuntimeError()
     
     def apply_operator(self, op):
+        """
+        Applies the given operator to the current solution
+        """
         if op[0] == 'sb':
             self.operator_switch_book(*op[1:])
         else:
             raise RuntimeError()
     
     def operator_switch_book(self, lib=None, book=None, book_to_replace=None):
+        """
+        Swaps a book that wasn't scanned by anyone with a book from a library that contains it
+        If any of lib, book or book_to_replace aren't specified, they are chosen randomly 
+        """
         if book == None or lib == None or book_to_replace == None:
             book = random.choice(tuple(self.remaining_books))
 
@@ -245,18 +286,20 @@ class Problem:
 
         return True
 
-    def annealing(self):
-        
-        T = 20
-        while True:
+    def annealing(self, T=20, cooling=0.95):
+        """
+        Implementation of the simulated annealing algorithm
+        The initial temperature T and cooling can be specified as optional parameters
+        """
+        while T > 0.0001:
             if len(self.remaining_books) == 0:
                 return
-            T *= 0.99
+            T *= cooling
             old_score = self.total_score
             while not self.operator_switch_book():
                 pass
             delta = self.total_score - old_score
-            # Reversed conditions as we want to "fuck go back" as our "stay in the current state"
+            # Reversed conditions as we want to "go back" as our "stay in the current state"
             # if delta <= 0 and exp(delta / T) < random.uniform(0, 1):
             #     self.undo()
             if delta > 0:
@@ -268,6 +311,9 @@ class Problem:
 
 
     def get_best_operator(self):
+        """
+        Returns the best possible operator at the current solution that wasn't included in the Taboo list
+        """
         best_op_score = -1
         best_op = None
 
@@ -282,12 +328,15 @@ class Problem:
                             best_op_score = op_score
 
         if best_op == None:
-            print("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+            print("WARNING: No valid operator found")
 
         return best_op, best_op_score
 
 
     def tabu_search(self):
+        """
+        Implementation of the tabu search algorithm
+        """
         self.tabu_list = []
 
         while (True): # Stop condition
@@ -296,10 +345,10 @@ class Problem:
             if op_score > self.total_score:
                 # Go to state
                 self.apply_operator(op)
-                print("UWU UWU UWU UWU")
+                print("Better operator found")
                 pass
             else:
-                print("RRRRRREEEEEEEEEEEEEEE")
+                print("No operation improves the current solution 🙃")
             
             self.tabu_list.append(op)
             if len(self.tabu_list) > 100: # Max size of tabu list

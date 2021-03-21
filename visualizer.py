@@ -2,6 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def plot_result(p, name="Hashcode Docs Example", show=False):
+    """
+    Plots the solution of a book scanning problem
+    Not compatible with PyPy
+    """
 
     with plt.style.context('default'):
 
