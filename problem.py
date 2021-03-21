@@ -1,5 +1,6 @@
 import random
 from math import exp
+from decorators import timer
 
 class TestFiles:
     test_a = "test/a_example.txt"
@@ -16,8 +17,8 @@ class Library:
         self.n_books = n_books
         self.signup = signup
         self.processing = processing
-        self.books = None
-        self.scanned = None
+        self.books = set()
+        self.scanned = set()
     
     def __str__(self):
         return str(self.index)
@@ -75,6 +76,7 @@ class Problem:
 
 
     @staticmethod
+    @timer
     def from_file(filename):
         with open(filename) as f:
             book, n_libraries, deadline = [int(elem) for elem in f.readline().split()]
@@ -88,7 +90,7 @@ class Problem:
                 libraries.append(Library(i, *(int(elem) for elem in f.readline().split())))
                 books.append([int(elem) for elem in f.readline().split()])
                 libraries[i].set_books(books[-1])
-                all_books = all_books.union(books[-1])
+                all_books.update(books[-1])
 
             return Problem(book, n_libraries, deadline, scores, libraries, books, all_books)
 
@@ -121,6 +123,7 @@ class Problem:
     def eval_library(self, library):
         return self.eval_library_index(library.index)
 
+    @timer
     def hillclimbing(self, reavaluations = None):
         self.signups = []
         self.sent = []
@@ -146,16 +149,18 @@ class Problem:
                 self.eval_libs()
                 libs = sorted((l for l in self.libraries if l not in self.signups), key=self.eval_library, reverse=True)
                 curLibIndex = 0
+                if len(libs) == 0:
+                    break
 
 
             curLib = libs[curLibIndex]
             t += curLib.signup
             if t >= self.deadline:
                 break
-            
+
             self.time_left = self.deadline - t
             self.signups.append(curLib)
-            
+
             tleft = max((self.deadline - t, 0))
             max_books_scanned = min((curLib.n_books, tleft * curLib.processing))
 
@@ -176,7 +181,7 @@ class Problem:
 
             curLibIndex += 1
 
-        self.libraries_used = curLibIndex
+        self.libraries_used = len(self.signups)
         self.total_score = total_score
 
         chosen_lib_books = set()
