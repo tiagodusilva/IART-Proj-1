@@ -215,7 +215,7 @@ class Problem:
     def annealing(self, T = 1000000, cooling = 0.99):
         solution = Solution.fromRandom(self).eval()
 
-        while T > 1000:
+        while T > 0.001:
             T *= cooling
             
             prevScore = solution.score
@@ -233,7 +233,7 @@ class Problem:
             if delta > 0:
                 if self.verbose:
                     print(f"BEST: {solution.score}")
-            elif exp(-delta / T) < random.random():                
+            elif exp(delta / T) < random.random():                
                 # Undo operation
                 if r > 0.2: # Switch Book
                     op = solution.swapBooks(*op)
