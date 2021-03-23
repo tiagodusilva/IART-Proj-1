@@ -1,17 +1,19 @@
 import sys
 from problem import Problem, TestFiles
 
-testfile = TestFiles.test_b
+testfile = TestFiles.test_f
 
 print(f"DATASET: {testfile}")
 
 p = Problem.from_file(testfile)
 p.hillclimbing(reavaluations=20)
 
-print(f"Final Score: {p.total_score}")
+print(f"Hill Climbing Score: {p.total_score}")
 
-# p.annealing()
+p.annealing()
 # p.tabu_search()
+
+print(f"Final Score: {p.total_score}")
 
 p.dump_solution(testfile.replace("test/", "sol/"))
 

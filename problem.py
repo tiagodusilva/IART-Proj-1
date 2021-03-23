@@ -286,13 +286,14 @@ class Problem:
 
         return True
 
-    def annealing(self, T=20, cooling=0.95):
+    def annealing(self, T=10000, cooling=0.99, stopT=100):
         """
         Implementation of the simulated annealing algorithm
         The initial temperature T and cooling can be specified as optional parameters
         """
-        while T > 0.0001:
+        while T > stopT:
             if len(self.remaining_books) == 0:
+                print("No more books to switch")
                 return
             T *= cooling
             old_score = self.total_score
@@ -305,7 +306,7 @@ class Problem:
             if delta > 0:
                 print(f"BEST: {self.total_score}")
                 # print(self.sent)
-            elif exp(delta / T) < random.uniform(0, 1):
+            elif exp(-delta / T) < random.uniform(0, 1):
                 self.undo()
 
 
