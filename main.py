@@ -1,25 +1,37 @@
 import sys
-from problem import Problem, TestFiles
+from problem import Problem
+from args import parse_args
 
-testfile = TestFiles.test_f
+args = parse_args()
 
-print(f"DATASET: {testfile}")
+print(f"DATASET: {args.testfile}")
+p = Problem.from_file(args.testfile, args.verbose)
 
-p = Problem.from_file(testfile)
-p.hillclimbing(reavaluations=20)
+if args.hill:
+    sol = p.hill_climb()
+    print(f"Hill Climbing Score: {sol.score}")
+    pass
+elif args.annealing:
+    # p.annealing()
+    # print(f"Simulated Annealing Score: {p.total_score}")
+    pass
+elif args.tabu:
+    # p.tabu_search()
+    # print(f"Tabu Search Score: {p.total_score}")
+    pass
+elif args.gen:
+    # p.genetic()
+    # print(f"Genetic Score: {p.total_score}")
+    pass
+else:
+    print("Nani")
+    exit()
 
-print(f"Hill Climbing Score: {p.total_score}")
+# p.dump_solution(testfile.replace("test/", "sol/"))
 
-p.annealing()
-# p.tabu_search()
-
-print(f"Final Score: {p.total_score}")
-
-p.dump_solution(testfile.replace("test/", "sol/"))
-
-if len(sys.argv) > 1 and sys.argv[1].lower() == '-v':
+if args.plot:
     from visualizer import plot_result
     import matplotlib.pyplot as plt
 
-    fig, ax = plot_result(p, testfile, show=True)
+    # fig, ax = plot_result(p, testfile, show=True)
     # fig.savefig("uwu.png", dpi=200)
