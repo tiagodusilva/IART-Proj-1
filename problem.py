@@ -31,9 +31,19 @@ class Solution:
         self.problem = problem
         self.score = 0
 
+    def getDeadLineBooks(self):
+        t = 0
+        index = 0
+        for lib in self.libraries:
+            t += lib.signup
+            index += 1
+            if t >= self.problem.deadline:
+                break
+        return self.libraries[:index]
+
     def swapLibs(self, index1=None, index2=None):
         if index1 == None:
-            index1 = random.randrange(len(self.libraries))
+            index1 = random.randrange(len(self.getDeadLineBooks()))
         if index2 == None:
             index2 = random.randrange(len(self.libraries))
             
@@ -42,7 +52,7 @@ class Solution:
 
     def swapBooks(self, libIndex = None, indexBook1=None, indexBook2=None):
         if libIndex == None:
-            libIndex = random.randrange(len(self.libraries))
+            libIndex = random.randrange(len(self.getDeadLineBooks()))
         if indexBook1 == None:
             indexBook1 = random.randrange(self.libraries[libIndex].n_books)
         if indexBook2 == None:
@@ -94,15 +104,11 @@ class Solution:
             
             lib_t = t
             processed = 0
-            for book in lib.books:
-                books.add(book)
 
-                processed += 1
-                if processed >= lib.processing:
-                    lib_t += 1
-                    processed = 0
-                if lib_t > self.problem.deadline:
-                    break
+            tleft = max((self.problem.deadline - t, 0))
+            max_books_scanned = min((lib.n_books, tleft * lib.processing))
+
+            books.update(lib.books[:max_books_scanned])
 
         self.score = 0
         for book in books:
@@ -159,13 +165,8 @@ class Problem:
             for i in range(0, len(self.libraries)):
                 t+=self.libraries[i].signup
 
-                if(t > self.deadline):
-                    flag=False
-                    break
-
                 for j in range(i + 1, len(self.libraries)):
                     # print(j)
-                    
 
                     prevScore = solution.score
                     index1, index2 = solution.swapLibs(i, j)
@@ -186,8 +187,11 @@ class Problem:
                 if i == len(self.libraries) - 1:
                     flag = False
                 if nextIter:
-                        nextIter = False 
-                        break
+                    nextIter = False 
+                    break
+                if(t > self.deadline):
+                    flag=False
+                    break
         
         return solution
 
@@ -206,4 +210,48 @@ class Problem:
 #             // Return current node since no better neighbors exist
 #             return currentNode
 #         currentNode := nextNode
+
+
+    def annealing(self, T = 1000000, cooling = 0.99):
+        solution = Solution.fromRandom(self).eval()
+
+        while T > 1000:
+            T *= cooling
+            
+            prevScore = solution.score
+
+            r = random.random()
+            op = None
+            if r > 0.2: # Switch Book
+                op = solution.swapBooks()
+            else: # Switch Libraries
+                op = solution.swapLibs()
+            
+            solution.eval()
+            delta = solution.score - prevScore
+            # Reversed conditions as we want to "go back" as our "stay in the current state"
+            if delta > 0:
+                if self.verbose:
+                    print(f"BEST: {solution.score}")
+            elif exp(-delta / T) < random.random():                
+                # Undo operation
+                if r > 0.2: # Switch Book
+                    op = solution.swapBooks(*op)
+                else: # Switch Libraries
+                    op = solution.swapLibs(*op)
+        
+        return solution
+
+
+    # Let s = s0
+    # For k = 0 through kmax (exclusive):
+    #     T ← temperature( (k+1)/kmax )
+    #     Pick a random neighbour, snew ← neighbour(s)
+    #     If P(E(s), E(snew), T) ≥ random(0, 1):
+    #         s ← snew
+    # Output: the final state s
+
+
+
+        
 

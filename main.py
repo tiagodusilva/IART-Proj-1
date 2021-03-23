@@ -12,8 +12,8 @@ if args.hill:
     print(f"Hill Climbing Score: {sol.score}")
     pass
 elif args.annealing:
-    # p.annealing()
-    # print(f"Simulated Annealing Score: {p.total_score}")
+    sol = p.annealing()
+    print(f"Simulated Annealing Score: {sol.score}")
     pass
 elif args.tabu:
     # p.tabu_search()
