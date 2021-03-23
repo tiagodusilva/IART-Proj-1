@@ -1,4 +1,5 @@
 import argparse
+import random
 
 testfiles = {
     "a": "test/a_example.txt",
@@ -13,6 +14,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description = "Book Scanning ~ IART Proj 1 g42")
     parser.add_argument("-v", "--verbose", action = "count", help = "Increase verbosity")
     parser.add_argument("-t", "--test", action = "store", choices=testfiles.keys(), default="b", help = "Test file to use")
+    parser.add_argument("-s", "--seed", action = "store", default=None, help = "Seed for the random generator")
     parser.add_argument("-p", "--plot", "--plotting", action = "store_true", help = "Plot result, incompatible with PyPy")
     parser.add_argument("--hill", "--hillclimbing", action = "store_true", help = "Use hill climbing")
     parser.add_argument("-sa", "--annealing", action = "store_true", help = "Use simulated annealing")
@@ -29,5 +31,7 @@ def parse_args():
     elif search_modes > 1:
         print("You cannot specify multiple search types at once!")
         exit()
+    
+    random.seed(args.seed)
 
     return args

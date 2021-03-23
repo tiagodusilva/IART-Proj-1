@@ -155,26 +155,39 @@ class Problem:
         flag = True
         nextIter = False
         while flag:
+            t=0
             for i in range(0, len(self.libraries)):
+                t+=self.libraries[i].signup
+
+                if(t > self.deadline):
+                    flag=False
+                    break
+
                 for j in range(i + 1, len(self.libraries)):
+                    # print(j)
+                    
+
                     prevScore = solution.score
                     index1, index2 = solution.swapLibs(i, j)
                     solution.eval()
-                    if prevScore >= solution.score:
-                        # Undo swap   
-                        if self.verbose:
-                            # print(f"Discarding swap {index1} - {index2}")
-                            pass                  
+
+                    prevT = t
+                    t = t - self.libraries[index2].signup + self.libraries[index1].signup
+
+                    if prevScore >= solution.score or t > self.deadline:
+                        # Undo swap       
+                        t = prevT           
                         solution.swapLibs(index2, index1)
                         solution.score = prevScore
                     else:
+                        
                         if self.verbose:
-                            print(f"Found better solution {solution.score} on the swap {index1} -> {index2}")
-                        nextIter = True
+                            print(f"Found better solution {solution.score} on the lib swap {index1} -> {index2}")
+                if i == len(self.libraries) - 1:
+                    flag = False
+                if nextIter:
+                        nextIter = False 
                         break
-            if i == len(self.libraries) - 1:
-                flag = False
-            if(nextIter): break
         
         return solution
 
