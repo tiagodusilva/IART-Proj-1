@@ -8,11 +8,12 @@ class Library:
     Represents and links all the information about a certain library
     """
 
-    def __init__(self, n_books, signup, processing):
+    def __init__(self, n_books, signup, processing, id):
         self.n_books = n_books
         self.signup = signup
         self.processing = processing
         self.books = []
+        self.id = None
     
     def __str__(self):
         return str(self.index)
@@ -30,6 +31,28 @@ class Solution:
         super().__init__()
         self.problem = problem
         self.score = 0
+
+    @staticmethod
+    def fromRandom(problem):
+        self = Solution(problem)
+        self.libraries = deepcopy(problem.libraries)
+        random.shuffle(self.libraries)
+        for lib in self.libraries:
+            random.shuffle(lib.books)
+        return self
+
+    @staticmethod
+    def fromRandomLibsOrderedBooks(problem):
+        self = Solution(problem)
+        self.libraries = deepcopy(problem.libraries)
+        random.shuffle(self.libraries)
+        
+        def sorting_key(book):
+            return self.problem.scores[book]
+
+        for lib in self.libraries:
+            lib.books.sort(key=sorting_key, reverse=True)
+        return self
 
     def getDeadLineBooks(self):
         t = 0
@@ -64,14 +87,33 @@ class Solution:
         )
         return (libIndex, indexBook1, indexBook2)
 
-    @staticmethod
-    def fromRandom(problem):
-        self = Solution(problem)
-        self.libraries = deepcopy(problem.libraries)
-        random.shuffle(self.libraries)
-        for lib in self.libraries:
-            random.shuffle(lib.books)
-        return self
+
+    def __xor__(self, other):
+        return self.ox1(other)
+
+
+    # Crossover operator
+    def ox1(self, other):
+        left, right = random.randint(0, len(self.libraries)), random.randint(0, len(self.libraries))
+        if right < left:
+            right, left = left, right
+        
+        sol1 = deepcopy(self)
+        sol2 = deepcopy(other)
+
+        parentsGenes = sol1.libraries[left:right]
+
+
+
+        pass
+
+    
+    def __lt__(self, other):
+        if self.score == None:
+            self.eval()
+        if other.score == None:
+            other.eval()
+        return self.score < other.score
 
 
     def dump_solution(self, filename):
@@ -153,11 +195,14 @@ class Problem:
                 libraries.append(Library(*(int(elem) for elem in f.readline().split())))
                 books.append([int(elem) for elem in f.readline().split()])
                 libraries[i].set_books(books[-1])
+                libraries[i].id = i
 
             return Problem(n_books, n_libraries, deadline, scores, libraries, books, verbose)
 
+    @timer
     def hill_climb(self):
         solution = Solution.fromRandom(self).eval()
+        # solution = Solution.fromRandomLibsOrderedBooks(self).eval()
         flag = True
         nextIter = False
         while flag:
@@ -211,11 +256,13 @@ class Problem:
 #             return currentNode
 #         currentNode := nextNode
 
-
-    def annealing(self, T = 1000000, cooling = 0.99):
+    @timer
+    def annealing(self, T = 10000000, cooling = 0.99):
         solution = Solution.fromRandom(self).eval()
-
+        # solution = Solution.fromRandomLibsOrderedBooks(self).eval()
+        it = 0
         while T > 0.001:
+            it += 1
             T *= cooling
             
             prevScore = solution.score
@@ -240,8 +287,8 @@ class Problem:
                 else: # Switch Libraries
                     op = solution.swapLibs(*op)
         
+        print(it)
         return solution
-
 
     # Let s = s0
     # For k = 0 through kmax (exclusive):
@@ -251,7 +298,35 @@ class Problem:
     #         s ← snew
     # Output: the final state s
 
+    # [ResultParaGuardar [if ResultadoB] for i in Iterator [if quero guardar este]]
+    @timer
+    def genetic(self, reproduce):
+        parents = [Solution.fromRandom(self) for i in range(50)]
+        while True:
+            children = []
+            for i in range(0,len(parents)):
+                father = random.choice(parents)
+                mother = random.choice(parents)
+                child = reproduce(father, mother)
+                child.eval()
+                #mutation
+                if 0.05 < random.random():
+                    r = random.random()
+                    if r > 0.2: # Switch Book
+                        child.swapBooks()
+                    else: # Switch Libraries
+                        child.swapLibs()
+                children.append(child)
+            
+            #sort list by libraries scores
+            parents.sort()
+            children.sort()
 
-
+            #swaps the worst half of the parent for the best half of the children
+            if self.verbose:
+                print(f"Parents best and worst: {parents[0]} | {parents[-1]}")
+                print(f"Parents best and worst: {children[0]} | {children[-1]}")
         
-
+            for j in range(0,len(parents)//2):
+                parents[len(parents)/2 + j] = children[j]
+        
