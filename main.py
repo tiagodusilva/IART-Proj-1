@@ -16,12 +16,12 @@ elif args.annealing:
     print(f"Simulated Annealing Score: {sol.score}")
     pass
 elif args.tabu:
-    # p.tabu_search()
-    # print(f"Tabu Search Score: {p.total_score}")
+    # sol = p.tabu_search()
+    # print(f"Tabu Search Score: {sol.score}")
     pass
 elif args.gen:
-    # p.genetic()
-    # print(f"Genetic Score: {p.total_score}")
+    sol = p.genetic()
+    print(f"Genetic Score: {sol.score}")
     pass
 else:
     print("Nani")

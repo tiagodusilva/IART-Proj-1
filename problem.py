@@ -1,7 +1,7 @@
 import random
 from math import exp
 from decorators import timer
-from copy import deepcopy
+from copy import copy, deepcopy
 
 class Library:
     """
@@ -13,13 +13,13 @@ class Library:
         self.signup = signup
         self.processing = processing
         self.books = []
-        self.id = None
+        self.id = id
     
     def __str__(self):
-        return str(self.index)
+        return str(self.id)
     
     def __repr__(self):
-        return str(self.index)
+        return str(self.id)
     
     def set_books(self, books):
         self.books = books
@@ -88,6 +88,13 @@ class Solution:
         return (libIndex, indexBook1, indexBook2)
 
 
+    def __str__(self):
+        return str(self.score)
+    
+    def __repr__(self):
+        return str(self.score)
+
+
     def __xor__(self, other):
         return self.ox1(other)
 
@@ -98,14 +105,22 @@ class Solution:
         if right < left:
             right, left = left, right
         
-        sol1 = deepcopy(self)
-        sol2 = deepcopy(other)
+        child_sol = Solution(self.problem)
+        child_sol.libraries = [None for _ in self.libraries]
 
-        parentsGenes = sol1.libraries[left:right]
+        for i in range(left, right):
+            child_sol.libraries[i] = deepcopy(other.libraries[i])
+        
+        new_sol_i = right % len(child_sol.libraries)
+        for i in range(len(child_sol.libraries)):
+            j = (i + right) % len(child_sol.libraries)
+            if self.libraries[j].id not in (lib.id for lib in child_sol.libraries if lib != None):
+                child_sol.libraries[new_sol_i] = deepcopy(self.libraries[j])
+                new_sol_i += 1
+                if new_sol_i >= len(child_sol.libraries):
+                    new_sol_i = 0
 
-
-
-        pass
+        return child_sol
 
     
     def __lt__(self, other):
@@ -192,10 +207,9 @@ class Problem:
             books = []
 
             for i in range(n_libraries):
-                libraries.append(Library(*(int(elem) for elem in f.readline().split())))
+                libraries.append(Library(*(int(elem) for elem in f.readline().split()), i))
                 books.append([int(elem) for elem in f.readline().split()])
                 libraries[i].set_books(books[-1])
-                libraries[i].id = i
 
             return Problem(n_books, n_libraries, deadline, scores, libraries, books, verbose)
 
@@ -290,6 +304,7 @@ class Problem:
         print(it)
         return solution
 
+    #         Pseudocode
     # Let s = s0
     # For k = 0 through kmax (exclusive):
     #     T ← temperature( (k+1)/kmax )
@@ -298,35 +313,41 @@ class Problem:
     #         s ← snew
     # Output: the final state s
 
-    # [ResultParaGuardar [if ResultadoB] for i in Iterator [if quero guardar este]]
     @timer
-    def genetic(self, reproduce):
-        parents = [Solution.fromRandom(self) for i in range(50)]
-        while True:
-            children = []
-            for i in range(0,len(parents)):
-                father = random.choice(parents)
+    def genetic(self, reproduce = Solution.ox1, max_generations = 100):
+        parents = [Solution.fromRandom(self).eval() for i in range(50)]
+        half_population = 25
+        generation = 0
+
+        while generation < max_generations:
+            parents.sort(reverse=True)
+            children = copy(parents)
+
+            for i in range(0, len(parents) // 2):
+                father = parents[i]
                 mother = random.choice(parents)
-                child = reproduce(father, mother)
-                child.eval()
-                #mutation
+
+                children[i + half_population] = reproduce(father, mother).eval()
+
+                # Mutation
                 if 0.05 < random.random():
                     r = random.random()
                     if r > 0.2: # Switch Book
-                        child.swapBooks()
+                        children[i + half_population].swapBooks()
                     else: # Switch Libraries
-                        child.swapLibs()
-                children.append(child)
+                        children[i + half_population].swapLibs()
             
-            #sort list by libraries scores
-            parents.sort()
-            children.sort()
+            # Sort list by libraries scores
+            parents = children
+            parents.sort(reverse=True)
 
-            #swaps the worst half of the parent for the best half of the children
+            generation += 1
+
+            # Swaps the worst half of the parent for the best half of the children
             if self.verbose:
-                print(f"Parents best and worst: {parents[0]} | {parents[-1]}")
-                print(f"Parents best and worst: {children[0]} | {children[-1]}")
+                print(f"Gen {generation} best and worst: {parents[0]} | {parents[-1]}")
         
-            for j in range(0,len(parents)//2):
-                parents[len(parents)/2 + j] = children[j]
-        
+            # for j in range(0,len(parents)//2):
+            #     parents[len(parents) // 2 + j] = children[j]
+    
+        return parents[0]
