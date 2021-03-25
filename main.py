@@ -7,6 +7,7 @@ args = parse_args()
 print(f"DATASET: {args.testfile}")
 p = Problem.from_file(args.testfile, args.verbose)
 
+sol = None
 if args.hill:
     sol = p.hill_climb()
     print(f"Hill Climbing Score: {sol.score}")
@@ -33,5 +34,5 @@ if args.plot:
     from visualizer import plot_result
     import matplotlib.pyplot as plt
 
-    # fig, ax = plot_result(p, testfile, show=True)
-    # fig.savefig("uwu.png", dpi=200)
+    fig, ax = plot_result(sol, args.testfile, show=True)
+    fig.savefig("uwu.png", dpi=200)
