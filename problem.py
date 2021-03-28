@@ -212,45 +212,80 @@ class Problem:
                 libraries[i].set_books(books[-1])
 
             return Problem(n_books, n_libraries, deadline, scores, libraries, books, verbose)
+    
+
+    def neighborhood(self, solution):
+        t = 0
+        for i in range(0, len(self.libraries)):
+            t += self.libraries[i].signup
+
+            for j in range(i + 1, len(self.libraries)):
+
+                if t > self.deadline:
+                    break
+
+                prevScore = solution.score
+                index1, index2 = solution.swapLibs(i, j)
+                solution.eval()
+
+                prevT = t
+                t = t - self.libraries[index2].signup + self.libraries[index1].signup
+
+                yield solution
+
+                # Undo swap       
+                t = prevT
+                solution.swapLibs(index2, index1)
+                solution.score = prevScore
+
 
     @timer
     def hill_climb(self):
         solution = Solution.fromRandom(self).eval()
         # solution = Solution.fromRandomLibsOrderedBooks(self).eval()
-        flag = True
-        nextIter = False
-        while flag:
-            t=0
-            for i in range(0, len(self.libraries)):
-                t+=self.libraries[i].signup
 
-                for j in range(i + 1, len(self.libraries)):
-                    # print(j)
+        while True:
+            prevScore = solution.score
+            for sol in self.neighborhood(solution):
+                if sol.score > prevScore:
+                    solution = sol
+                    break
+            else:
+                return solution
 
-                    prevScore = solution.score
-                    index1, index2 = solution.swapLibs(i, j)
-                    solution.eval()
 
-                    prevT = t
-                    t = t - self.libraries[index2].signup + self.libraries[index1].signup
+        # while flag:
+        #     t=0
+        #     for i in range(0, len(self.libraries)):
+        #         t+=self.libraries[i].signup
 
-                    if prevScore >= solution.score or t > self.deadline:
-                        # Undo swap       
-                        t = prevT           
-                        solution.swapLibs(index2, index1)
-                        solution.score = prevScore
-                    else:
+        #         for j in range(i + 1, len(self.libraries)):
+        #             # print(j)
+
+        #             prevScore = solution.score
+        #             index1, index2 = solution.swapLibs(i, j)
+        #             solution.eval()
+
+        #             prevT = t
+        #             t = t - self.libraries[index2].signup + self.libraries[index1].signup
+
+        #             if prevScore >= solution.score or t > self.deadline:
+        #                 # Undo swap       
+        #                 t = prevT           
+        #                 solution.swapLibs(index2, index1)
+        #                 solution.score = prevScore
+        #             else:
                         
-                        if self.verbose:
-                            print(f"Found better solution {solution.score} on the lib swap {index1} -> {index2}")
-                if i == len(self.libraries) - 1:
-                    flag = False
-                if nextIter:
-                    nextIter = False 
-                    break
-                if(t > self.deadline):
-                    flag=False
-                    break
+        #                 if self.verbose:
+        #                     print(f"Found better solution {solution.score} on the lib swap {index1} -> {index2}")
+        #         if i == len(self.libraries) - 1:
+        #             flag = False
+        #         if nextIter:
+        #             nextIter = False 
+        #             break
+        #         if(t > self.deadline):
+        #             flag=False
+        #             break
         
         return solution
 
@@ -271,11 +306,18 @@ class Problem:
 #         currentNode := nextNode
 
     @timer
-    def annealing(self, T = 10000000, cooling = 0.99):
+    def annealing(self, T = 100000, cooling = 0.99):
         solution = Solution.fromRandom(self).eval()
         # solution = Solution.fromRandomLibsOrderedBooks(self).eval()
         it = 0
+        bestSolution = copy(solution)
+        bestT = T
         while T > 0.001:
+            if(random.random() <= 0.01):
+                if(self.verbose):
+                    print(f"Restarting with Temperature: {bestT} with score {bestSolution.score}")
+                solution = copy(bestSolution)
+                T = bestT
             it += 1
             T *= cooling
             
@@ -292,6 +334,9 @@ class Problem:
             delta = solution.score - prevScore
             # Reversed conditions as we want to "go back" as our "stay in the current state"
             if delta > 0:
+                if(solution.score > bestSolution.score):
+                    bestSolution = copy(solution)
+                    bestT = T
                 if self.verbose:
                     print(f"BEST: {solution.score}")
             elif exp(delta / T) < random.random():                
