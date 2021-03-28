@@ -9,16 +9,12 @@ p = Problem.from_file(args.testfile, args.verbose)
 
 sol = None
 if args.hill:
-    sol = p.hill_climb()
+    sol = p.hill_climb(randomBooks=args.random)
     print(f"Hill Climbing Score: {sol.score}")
     pass
 elif args.annealing:
-    sol = p.annealing()
+    sol = p.annealing(randomBooks=args.random)
     print(f"Simulated Annealing Score: {sol.score}")
-    pass
-elif args.tabu:
-    # sol = p.tabu_search()
-    # print(f"Tabu Search Score: {sol.score}")
     pass
 elif args.gen:
     sol = p.genetic()

@@ -18,13 +18,13 @@ def parse_args():
     parser.add_argument("-p", "--plot", "--plotting", action = "store_true", help = "Plot result, incompatible with PyPy")
     parser.add_argument("--hill", "--hillclimbing", action = "store_true", help = "Use hill climbing")
     parser.add_argument("-sa", "--annealing", action = "store_true", help = "Use simulated annealing")
-    parser.add_argument("-tb", "--tabu", "--tabu-search", action = "store_true", help = "Use tabu search")
     parser.add_argument("-g", "--gen", "--genetic", action = "store_true", help = "Use genetic algorithm")
+    parser.add_argument("-r", "--random", action = "store_true", help = "Randomize the book order")
 
     args = parser.parse_args()
 
     args.testfile = testfiles[args.test]
-    search_modes = int(args.hill) + int(args.annealing) + int(args.tabu) + int(args.gen)
+    search_modes = int(args.hill) + int(args.annealing) + int(args.gen)
 
     if search_modes == 0:
         args.hill = True
