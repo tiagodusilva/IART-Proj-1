@@ -54,6 +54,24 @@ class Solution:
             lib.books.sort(key=sorting_key, reverse=True)
         return self
 
+    @staticmethod
+    def fromGreedySearch(problem):
+        self = Solution(problem)
+        self.libraries = deepcopy(problem.libraries)
+        
+        def book_sorting_key(book):
+            return self.problem.scores[book]
+
+        for lib in self.libraries:
+            lib.books.sort(key=book_sorting_key, reverse=True)
+        
+        def lib_sorting_key(lib):
+            return sum(self.problem.scores[book] for book in lib.books) / lib.signup
+        
+        self.libraries.sort(key=lib_sorting_key, reverse=True)
+
+        return self
+
     def getDeadLineBooks(self):
         t = 0
         index = 0
@@ -181,7 +199,7 @@ class Problem:
     Represents everything needed to represent and solve a book scanning problem
     """
 
-    def __init__(self, n_books, n_libraries, deadline, scores, libraries, books, verbose):
+    def __init__(self, n_books, n_libraries, deadline, scores, libraries, books, solution_initializer=Solution.fromRandom, verbose=False):
         super().__init__()
         # Input
         self.n_books = n_books
@@ -190,12 +208,13 @@ class Problem:
         self.scores = scores
         self.libraries = libraries
         self.books = books
+        self.solution_initializer = solution_initializer
         self.verbose = verbose
 
 
     @staticmethod
     @timer
-    def from_file(filename, verbose=False):
+    def from_file(filename, solution_initializer=Solution.fromRandom, verbose=False):
         """
         Returns a new problem from a given input file
         """
@@ -211,7 +230,7 @@ class Problem:
                 books.append([int(elem) for elem in f.readline().split()])
                 libraries[i].set_books(books[-1])
 
-            return Problem(n_books, n_libraries, deadline, scores, libraries, books, verbose)
+            return Problem(n_books, n_libraries, deadline, scores, libraries, books, solution_initializer, verbose)
     
 
     def neighborhood(self, solution):
@@ -241,12 +260,8 @@ class Problem:
 
 
     @timer
-    def steepest_ascent(self, randomBooks=True):
-        solution = None
-        if randomBooks:
-            solution = Solution.fromRandom(self).eval()
-        else:
-            solution = Solution.fromRandomLibsOrderedBooks(self).eval()
+    def steepest_ascent(self):
+        solution = self.solution_initializer(self).eval()
 
         while True:
             prevScore = solution.score
@@ -266,12 +281,8 @@ class Problem:
 
 
     @timer
-    def hill_climb(self, randomBooks=False):
-        solution = None
-        if randomBooks:
-            solution = Solution.fromRandom(self).eval()
-        else:
-            solution = Solution.fromRandomLibsOrderedBooks(self).eval()
+    def hill_climb(self):
+        solution = self.solution_initializer(self).eval()
 
         flag = True
         nextIter = False
@@ -327,21 +338,17 @@ class Problem:
 #         currentNode := nextNode
 
     @timer
-    def annealing(self, T = 1000000, cooling = 0.9, randomBooks=False):
-        solution = None
-        if randomBooks:
-            solution = Solution.fromRandom(self).eval()
-        else:
-            solution = Solution.fromRandomLibsOrderedBooks(self).eval()
+    def annealing(self, T, cooling):
+        solution = self.solution_initializer(self).eval()
 
         it = 0
         bestSolution = copy(solution)
         bestT = T
-        while T > 0.1:
+        while T > 10:
 
             it += 1
             T *= cooling
-            for i in range(0,300):    
+            for i in range(0, 50):    
                 prevScore = solution.score
 
                 r = random.random()
@@ -366,10 +373,10 @@ class Problem:
                         op = solution.swapBooks(*op)
                     else: # Switch Libraries
                         op = solution.swapLibs(*op)
-            print(f"Temp: {T}")
+            # print(f"Temp: {T}")
         
         if(self.verbose):
-            print("iteration:", it)
+            print("Iterations:", it)
         return bestSolution
 
     #         Pseudocode
@@ -382,8 +389,8 @@ class Problem:
     # Output: the final state s
 
     @timer
-    def genetic(self, reproduce = Solution.ox1, max_generations = 100):
-        parents = [Solution.fromRandom(self).eval() for i in range(50)]
+    def genetic(self, population, max_generations, reproduce = Solution.ox1):
+        parents = [Solution.fromRandom(self).eval() for i in range(population)]
         half_population = 25
         generation = 0
 
