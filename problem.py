@@ -327,7 +327,7 @@ class Problem:
 #         currentNode := nextNode
 
     @timer
-    def annealing(self, T = 100000, cooling = 0.99, randomBooks=False):
+    def annealing(self, T = 1000000, cooling = 0.9, randomBooks=False):
         solution = None
         if randomBooks:
             solution = Solution.fromRandom(self).eval()
@@ -337,42 +337,40 @@ class Problem:
         it = 0
         bestSolution = copy(solution)
         bestT = T
-        while T > 0.001:
-            if(random.random() <= 0.01):
-                if(self.verbose):
-                    print(f"Restarting with Temperature: {bestT} with score {bestSolution.score}")
-                solution = copy(bestSolution)
-                T = bestT
+        while T > 0.1:
+
             it += 1
             T *= cooling
-            
-            prevScore = solution.score
+            for i in range(0,300):    
+                prevScore = solution.score
 
-            r = random.random()
-            op = None
-            if r > 0.2: # Switch Book
-                op = solution.swapBooks()
-            else: # Switch Libraries
-                op = solution.swapLibs()
-            
-            solution.eval()
-            delta = solution.score - prevScore
-            # Reversed conditions as we want to "go back" as our "stay in the current state"
-            if delta > 0:
-                if(solution.score > bestSolution.score):
-                    bestSolution = copy(solution)
-                    bestT = T
-                if self.verbose:
-                    print(f"BEST: {solution.score}")
-            elif exp(delta / T) < random.random():                
-                # Undo operation
-                if r > 0.2: # Switch Book
-                    op = solution.swapBooks(*op)
+                r = random.random()
+                op = None
+                if r > 0.5: # Switch Book
+                    op = solution.swapBooks()
                 else: # Switch Libraries
-                    op = solution.swapLibs(*op)
+                    op = solution.swapLibs()
+                
+                solution.eval()
+                delta = solution.score - prevScore
+                # Reversed conditions as we want to "go back" as our "stay in the current state"
+                if delta >= 0:
+                    if(solution.score > bestSolution.score):
+                        bestSolution = copy(solution)
+                        bestT = T
+                        if self.verbose:
+                            print(f"BEST: {solution.score}")
+                elif exp(delta / T) > random.random():                
+                    # Undo operation
+                    if r > 0.5: # Switch Book
+                        op = solution.swapBooks(*op)
+                    else: # Switch Libraries
+                        op = solution.swapLibs(*op)
+            print(f"Temp: {T}")
         
-        print(it)
-        return solution
+        if(self.verbose):
+            print("iteration:", it)
+        return bestSolution
 
     #         Pseudocode
     # Let s = s0
