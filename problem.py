@@ -340,44 +340,50 @@ class Problem:
     @timer
     def annealing(self, T, cooling):
         solution = self.solution_initializer(self).eval()
-
+        iteraciones = []
         it = 0
-        bestSolution = copy(solution)
-        bestT = T
-        while T > 10:
+        while T > .1:
 
             it += 1
             T *= cooling
-            for i in range(0, 50):    
-                prevScore = solution.score
 
-                r = random.random()
-                op = None
-                if r > 0.5: # Switch Book
-                    op = solution.swapBooks()
-                else: # Switch Libraries
-                    op = solution.swapLibs()
-                
-                solution.eval()
-                delta = solution.score - prevScore
-                # Reversed conditions as we want to "go back" as our "stay in the current state"
-                if delta >= 0:
-                    if(solution.score > bestSolution.score):
-                        bestSolution = copy(solution)
-                        bestT = T
-                        if self.verbose:
-                            print(f"BEST: {solution.score}")
-                elif exp(delta / T) > random.random():                
+            prevScore = solution.score
+
+            r = random.random()
+            op = None
+            if r > 0.5: # Switch Book
+                op = solution.swapBooks()
+            else: # Switch Libraries
+                op = solution.swapLibs()
+            
+            solution.eval()
+            delta = solution.score - prevScore
+            # Reversed conditions as we want to "go back" as our "stay in the current state"
+            if delta >= 0:
+                if self.verbose:
+                    print(f"BEST: {solution.score}")
+            else:
+                exp_arg = delta / T
+                if exp_arg < -2000 or exp(exp_arg) < random.random():
                     # Undo operation
                     if r > 0.5: # Switch Book
-                        op = solution.swapBooks(*op)
+                        solution.swapBooks(*op)
                     else: # Switch Libraries
-                        op = solution.swapLibs(*op)
+                        solution.swapLibs(*op)
+                    solution.score = prevScore
+
+            iteraciones.append((T, solution.score))
             # print(f"Temp: {T}")
-        
+        f = open("iteraciones.txt", 'w')
+        for T, _ in iteraciones:
+            f.write(f'{T} ')
+        f.write('\n')
+        for _, s in iteraciones:
+            f.write(f'{s} ')
+        f.close()
         if(self.verbose):
             print("Iterations:", it)
-        return bestSolution
+        return solution
 
     #         Pseudocode
     # Let s = s0

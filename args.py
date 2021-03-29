@@ -22,8 +22,8 @@ def parse_args():
     
     # Simulated Annealing
     parser.add_argument("-sa", "--annealing", action = "store_true", help = "Use simulated annealing")
-    parser.add_argument("-sat", "--annealing-temperature", action="store", nargs=1, type=float, default=1000000, help="Simulated annealing initial temperature")
-    parser.add_argument("-sac", "--annealing-cooling", action="store", nargs=1, type=float, default=0.9, help="Simulated annealing cooling")
+    parser.add_argument("-sat", "--annealing-temperature", action="store", nargs=1, type=float, default=100000, help="Simulated annealing initial temperature")
+    parser.add_argument("-sac", "--annealing-cooling", action="store", nargs=1, type=float, default=0.95, help="Simulated annealing cooling")
     
     # Genetic
     parser.add_argument("-g", "--gen", "--genetic", action="store_true", help = "Use genetic algorithm")
