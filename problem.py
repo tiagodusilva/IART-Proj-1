@@ -8,7 +8,7 @@ class Library:
     Represents and links all the information about a certain library
     """
 
-    def __init__(self, n_books, signup, processing, id):
+    def __init__(self, n_books:int, signup:int, processing:int, id:int):
         self.n_books = n_books
         self.signup = signup
         self.processing = processing
@@ -21,19 +21,19 @@ class Library:
     def __repr__(self):
         return str(self.id)
     
-    def set_books(self, books):
+    def set_books(self, books:list):
         self.books = books
 
 
 class Solution:
     
-    def __init__(self, problem):
+    def __init__(self, problem: Problem):
         super().__init__()
         self.problem = problem
         self.score = 0
 
     @staticmethod
-    def fromRandom(problem):
+    def fromRandom(problem: Problem) -> Solution:
         self = Solution(problem)
         self.libraries = deepcopy(problem.libraries)
         random.shuffle(self.libraries)
@@ -42,7 +42,7 @@ class Solution:
         return self
 
     @staticmethod
-    def fromRandomLibsOrderedBooks(problem):
+    def fromRandomLibsOrderedBooks(problem: Problem) -> Solution:
         self = Solution(problem)
         self.libraries = deepcopy(problem.libraries)
         random.shuffle(self.libraries)
@@ -55,7 +55,7 @@ class Solution:
         return self
 
     @staticmethod
-    def fromGreedySearch(problem):
+    def fromGreedySearch(problem: Problem) -> Solution:
         self = Solution(problem)
         self.libraries = deepcopy(problem.libraries)
         
@@ -72,7 +72,7 @@ class Solution:
 
         return self
 
-    def getDeadLineBooks(self):
+    def getDeadLineBooks(self) -> list:
         t = 0
         index = 0
         for lib in self.libraries:
@@ -82,7 +82,7 @@ class Solution:
                 break
         return self.libraries[:index]
 
-    def swapLibs(self, index1=None, index2=None):
+    def swapLibs(self, index1: int = None, index2: int = None) -> (int, int):
         if index1 == None:
             index1 = random.randrange(len(self.getDeadLineBooks()))
         if index2 == None:
@@ -91,7 +91,7 @@ class Solution:
         self.libraries[index1], self.libraries[index2] = self.libraries[index2], self.libraries[index1]
         return (index1, index2)
 
-    def swapBooks(self, libIndex = None, indexBook1=None, indexBook2=None):
+    def swapBooks(self, libIndex:int=None, indexBook1:int=None, indexBook2:int=None) -> (int, int, int):
         if libIndex == None:
             libIndex = random.randrange(len(self.getDeadLineBooks()))
         if indexBook1 == None:
@@ -118,7 +118,7 @@ class Solution:
 
 
     # Crossover operator
-    def ox1(self, other):
+    def ox1(self, other:Solution) -> Solution:
         left, right = random.randint(0, len(self.libraries)), random.randint(0, len(self.libraries))
         if right < left:
             right, left = left, right
@@ -149,7 +149,7 @@ class Solution:
         return self.score < other.score
 
 
-    def dump_solution(self, filename):
+    def dump_solution(self, filename:str) -> None:
         """
         Dumps to a file the current solution in the format specified by the hashcode
         """
@@ -168,7 +168,7 @@ class Solution:
         outfile.close()
 
 
-    def eval(self):
+    def eval(self) -> int:
         
         books = set()
         t = 0
@@ -214,7 +214,7 @@ class Problem:
 
     @staticmethod
     @timer
-    def from_file(filename, solution_initializer=Solution.fromRandom, verbose=False):
+    def from_file(filename:str, solution_initializer=Solution.fromRandom, verbose:bool=False):
         """
         Returns a new problem from a given input file
         """
@@ -233,7 +233,7 @@ class Problem:
             return Problem(n_books, n_libraries, deadline, scores, libraries, books, solution_initializer, verbose)
     
 
-    def neighborhood(self, solution):
+    def neighborhood(self, solution: Solution):
         t = 0
         for i in range(0, len(self.libraries)):
             t += self.libraries[i].signup
@@ -260,7 +260,7 @@ class Problem:
 
 
     @timer
-    def steepest_ascent(self):
+    def steepest_ascent(self) -> Solution:
         solution = self.solution_initializer(self).eval()
 
         while True:
@@ -281,7 +281,7 @@ class Problem:
 
 
     @timer
-    def hill_climb(self):
+    def hill_climb(self) -> Solution:
         solution = self.solution_initializer(self).eval()
 
         flag = True
@@ -338,7 +338,7 @@ class Problem:
 #         currentNode := nextNode
 
     @timer
-    def annealing(self, T, cooling):
+    def annealing(self, T:float, cooling:float) -> Solution:
         solution = self.solution_initializer(self).eval()
         iteraciones = []
         it = 0
@@ -395,7 +395,7 @@ class Problem:
     # Output: the final state s
 
     @timer
-    def genetic(self, population, max_generations, reproduce = Solution.ox1):
+    def genetic(self, population:int, max_generations:int, reproduce = Solution.ox1) -> Solution:
         parents = [Solution.fromRandom(self).eval() for i in range(population)]
         half_population = 25
         generation = 0

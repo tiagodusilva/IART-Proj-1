@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from problem import Solution, Problem
 
 def plot_result(sol, name="Hashcode Docs Example", show=False):
     """
@@ -32,7 +33,7 @@ def plot_result(sol, name="Hashcode Docs Example", show=False):
         return fig, ax
 
 
-def unique_lib_scores(sol):
+def unique_lib_scores(sol: Solution):
 
     books = set()
     lib_scores = [0 for _ in sol.libraries]
