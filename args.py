@@ -17,6 +17,7 @@ def parse_args():
     parser.add_argument("-t", "--test", action = "store", choices=testfiles.keys(), default="b", help = "Test file to use")
     parser.add_argument("-s", "--seed", action = "store", default=None, help = "Seed for the random generator")
     parser.add_argument("-p", "--plot", "--plotting", action = "store_true", help = "Plot result, incompatible with PyPy")
+    parser.add_argument("-d", "--dump", action = "store_true", help = "Dumps the solution into the 'sol' directory")
     
     parser.add_argument("--hill", "--hillclimbing", action = "store_true", help = "Use hill climbing")
     
@@ -50,6 +51,10 @@ def parse_args():
         print("You cannot specify multiple search types at once!")
         exit()
     
+    if args.annealing and (args.annealing_initial_cooling <= 0 or args.annealing_initial_cooling >= 1 or args.annealing_final_cooling <= 0 or args.annealing_final_cooling >= 1):
+        print("The cooling parameters must be a floating value in the range ]0, 1[")
+        exit()
+
     search_starts = int(args.random_start) + int(args.ordered_start) + int(args.greedy_start)
 
     if search_starts == 0:

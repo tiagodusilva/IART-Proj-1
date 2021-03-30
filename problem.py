@@ -208,21 +208,59 @@ class Solution:
         return self.score < other.score
 
 
+    def get_useful_solution(self) -> (list, list):
+
+        books = set()
+        libraries = []
+        used_books = []
+        t = 0
+        for lib in self.libraries:
+            t += lib.signup
+            if t >= self.problem.deadline:  # once the libs are out of the deadline the function ends
+                break
+            
+            tleft = max((self.problem.deadline - t, 0))
+            max_books_scanned = min((lib.n_books, tleft * lib.processing))  # calculates how many books will be scanned from the lib
+
+            lib_books = set()
+
+            scanned = 0
+            for b in lib.books:
+                if scanned >= max_books_scanned:
+                    break
+                if b not in books:
+                    scanned += 1
+                    lib_books.add(b)
+                    books.add(b)
+            
+            if len(lib_books) > 0:
+                libraries.append(lib.id)
+                used_books.append(lib_books)
+            else:
+                t -= lib.signup
+    
+        self.score = 0
+        for book in books:
+            self.score += self.problem.scores[book]
+        
+        return libraries, used_books
+
+
     def dump_solution(self, filename:str) -> None:
         """
         Dumps to a file the current solution in the format specified by the hashcode
         """
         outfile = open(filename, mode="w")
 
-        outfile.write("solution")
+        libraries, used_books = self.get_useful_solution()
 
-        # outfile.write(f"{self.libraries_used}\n")
+        outfile.write(f"{len(libraries)}")
 
-        # for i in range(self.libraries_used):
-        #     outfile.write(f"{self.signups[i].index} {len(self.sent[i])}\n")
-        #     for b in self.sent[i]:
-        #         outfile.write(f"{b} ")
-        #     outfile.write(f"\n")
+        for i in range(len(libraries)):
+            outfile.write(f"{libraries[i]} {len(used_books[i])}\n")
+            for b in used_books[i]:
+                outfile.write(f"{b} ")
+            outfile.write(f"\n")
 
         outfile.close()
 
