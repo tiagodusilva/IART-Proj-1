@@ -139,7 +139,7 @@ class Solution:
         return self.ox1(other)
 
 
-    # Crossover operator
+    # Best Crossover operator
     def ox1(self, other: Solution) -> Solution:
         """
         Cross over operator for our genetic algorithm
@@ -167,6 +167,32 @@ class Solution:
                 new_sol_i += 1
                 if new_sol_i >= len(child_sol.libraries):
                     new_sol_i = 0
+
+        return child_sol
+
+    # First Crossover operator
+    def singlePointCross(self, other: Solution) -> Solution:
+        """
+        The first cross over function
+        """
+
+        #Obtains one indexes from a parent to cross over to the child all the libs between it and the end
+        left, right = random.randint(0, len(self.libraries)), len(self.libraries) 
+        
+        child_sol = Solution(self.problem)
+        child_sol.libraries = [None for _ in self.libraries] #initiates a child with no libs
+
+        for i in range(left, right): #copies the libraries in between the random index and the end from the parent to the child
+            child_sol.libraries[i] = deepcopy(other.libraries[i]) 
+        
+        #Copies the remaining libraries from the second parent to the child maintaining their order
+        j=0
+        for i in range(0,right):
+            if self.libraries[i].id not in (lib.id for lib in child_sol.libraries if lib != None):
+                child_sol.libraries[j] = deepcopy(self.libraries[i])
+                j+=1
+                if(j>=right):
+                    break
 
         return child_sol
 
@@ -385,7 +411,6 @@ class Problem:
     @timer
     def annealing(self, T:float, initial_cooling:float, final_cooling:float) -> Solution:
         solution = self.solution_initializer(self).eval()
-        # iteraciones = []
         it = 0
         initial_T = T
         final_T = .1
@@ -421,14 +446,6 @@ class Problem:
                         solution.swapLibs(*op)
                     solution.score = prevScore
 
-            # iteraciones.append((T, solution.score))
-        # f = open("iteraciones.txt", 'w')
-        # for T, _ in iteraciones:
-        #     f.write(f'{T} ')
-        # f.write('\n')
-        # for _, s in iteraciones:
-        #     f.write(f'{s} ')
-        # f.close()
         if(self.verbose):
             print("Iterations:", it)
         return solution
@@ -443,7 +460,7 @@ class Problem:
     # Output: the final state s
 
     @timer
-    def genetic(self, population:int, max_generations:int, reproduce=Solution.ox1) -> Solution:
+    def genetic(self, population:int, max_generations:int, reproduce=Solution.singlePointCross) -> Solution:
         """
         Genetic algorithm with variable max generation and staring gens poll
         """
