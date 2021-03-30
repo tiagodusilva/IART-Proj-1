@@ -13,7 +13,7 @@ if args.hill:
     sol = p.hill_climb()
     print(f"Hill Climbing Score: {sol.score}")
 elif args.annealing:
-    sol = p.annealing(T=args.annealing_temperature, cooling=args.annealing_cooling)
+    sol = p.annealing(T=args.annealing_temperature, initial_cooling=args.annealing_initial_cooling, final_cooling=args.annealing_final_cooling)
     print(f"Simulated Annealing Score: {sol.score}")
 elif args.gen:
     sol = p.genetic(population=args.gen_population, max_generations=args.gen_generations)

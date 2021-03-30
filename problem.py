@@ -331,9 +331,12 @@ class Problem:
         flag = True #controls the while loop for the hill climb
 
         while flag:
-            t=0
+            t = 0
             for i in range(0, len(self.libraries)):
-                t+=self.libraries[i].signup
+                t += solution.libraries[i].signup
+
+                if t > self.deadline:
+                    return solution
 
                 for j in range(i + 1, len(self.libraries)):
       
@@ -347,23 +350,21 @@ class Problem:
                     t = t - solution.libraries[index2].signup + solution.libraries[index1].signup 
 
                     if prevScore >= solution.score or t > self.deadline:
-                        # Undo swap       
+                        # Undo swap
                         t = prevT           
                         solution.swapLibs(index2, index1)
                         solution.score = prevScore
                     else:
-                        
+                        had_better = True
                         if self.verbose:
                             print(f"Found better solution {solution.score} on the lib swap {index1} -> {index2}")
 
                 if i == len(self.libraries) - 1: # if i is at the end, no more optimizations are possible and so the loop ends
-                    flag = False
-                
+                    return solution
+                    
                 if(t > self.deadline): #if we try to swap libraries that are out of the deadline, since it makes no difference we stop the loop
-                    flag=False
                     break
-        
-        return solution
+
 
 #         Pseudocode
 # algorithm Discrete Space Hill Climbing is
@@ -382,13 +383,17 @@ class Problem:
 #         currentNode := nextNode
 
     @timer
-    def annealing(self, T:float, cooling:float) -> Solution:
+    def annealing(self, T:float, initial_cooling:float, final_cooling:float) -> Solution:
         solution = self.solution_initializer(self).eval()
         # iteraciones = []
         it = 0
-        while T > .1:
+        initial_T = T
+        final_T = .1
+        while T > final_T:
 
             it += 1
+            # Linear Interpolation of cooling
+            cooling = initial_cooling + (final_cooling - initial_cooling) * (T - initial_T) / (final_T - initial_T)
             T *= cooling
 
             prevScore = solution.score
