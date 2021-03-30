@@ -37,6 +37,9 @@ class Solution:
 
     @staticmethod
     def fromRandom(problem: Problem) -> Solution:
+        """
+        Generates a solution with random libraries order and random books order
+        """
         self = Solution(problem)
         self.libraries = deepcopy(problem.libraries)
         random.shuffle(self.libraries)
@@ -46,6 +49,9 @@ class Solution:
 
     @staticmethod
     def fromRandomLibsOrderedBooks(problem: Problem) -> Solution:
+        """
+        Generates a solution with random libraries order and sorted books by score
+        """
         self = Solution(problem)
         self.libraries = deepcopy(problem.libraries)
         random.shuffle(self.libraries)
@@ -59,11 +65,14 @@ class Solution:
 
     @staticmethod
     def fromGreedySearch(problem: Problem) -> Solution:
+        """
+        Generates a starting solution using a greedy algorithm
+        """
         self = Solution(problem)
         self.libraries = deepcopy(problem.libraries)
         
         def book_sorting_key(book):
-            return self.problem.scores[book]
+            return self.problem.scores[book] #Sorts the libraries by score in order to obrain the N first libraries still in the deadline
 
         for lib in self.libraries:
             lib.books.sort(key=book_sorting_key, reverse=True)
@@ -77,6 +86,9 @@ class Solution:
 
 
     def getDeadLineLibs(self) -> list:
+        """
+        Returns the max index of the libraries still in the deadline.
+        """
         t = 0
         index = 0
         for lib in self.libraries:
@@ -87,26 +99,32 @@ class Solution:
         return index
 
     def swapLibs(self, index1:int=None, index2:int=None) -> (int, int):
+        """
+        Operator to swap two libraries. The index can be specified in order to use those or ommited in order to generate random indexes
+        """
         if index1 == None:
-            index1 = random.randrange(self.getDeadLineLibs())
+            index1 = random.randrange(self.getDeadLineLibs())#guarentees the lib is in the deadline in order to make the change matter
         if index2 == None:
-            index2 = random.randrange(len(self.libraries))
+            index2 = random.randrange(len(self.libraries)) #gets the index of another random lib
             
         self.libraries[index1], self.libraries[index2] = self.libraries[index2], self.libraries[index1]
         return (index1, index2)
 
     def swapBooks(self, libIndex:int=None, indexBook1:int=None, indexBook2:int=None) -> (int, int, int):
+        """
+        Operator to swap two books. The index can be specified in order to use those or ommited in order to generate random indexes
+        """
         if libIndex == None:
-            libIndex = random.randrange(self.getDeadLineBooks())
+            libIndex = random.randrange(self.getDeadLineLibs()) #guarentees the lib is in the deadline in order to make the change matter
         if indexBook1 == None:
-            indexBook1 = random.randrange(self.libraries[libIndex].n_books)
+            indexBook1 = random.randrange(self.libraries[libIndex].n_books) #gets a random book to swap
         if indexBook2 == None:
             indexBook2 = random.randrange(self.libraries[libIndex].n_books)
             
         self.libraries[libIndex].books[indexBook1], self.libraries[libIndex].books[indexBook2] = (
             self.libraries[libIndex].books[indexBook2], 
             self.libraries[libIndex].books[indexBook1]
-        )
+        ) #swaps the books
         return (libIndex, indexBook1, indexBook2)
 
 
@@ -123,19 +141,27 @@ class Solution:
 
     # Crossover operator
     def ox1(self, other: Solution) -> Solution:
-        left, right = random.randint(0, len(self.libraries)), random.randint(0, len(self.libraries))
-        if right < left:
+        """
+        Cross over operator for our genetic algorithm
+        """
+
+        #Obtains two indexes from a parent to cross over to the child all the libs between them
+        left, right = random.randint(0, len(self.libraries)), random.randint(0, len(self.libraries)) 
+
+
+        if right < left: #guarentees the order of the random indexes are correct
             right, left = left, right
         
         child_sol = Solution(self.problem)
-        child_sol.libraries = [None for _ in self.libraries]
+        child_sol.libraries = [None for _ in self.libraries] #initiates a child with no libs
 
-        for i in range(left, right):
-            child_sol.libraries[i] = deepcopy(other.libraries[i])
+        for i in range(left, right): #copies the libraries in between the random indexes from the parent to the child
+            child_sol.libraries[i] = deepcopy(other.libraries[i]) 
         
+        #Copies the remaining libraries from the second parent to the child maintaining their order
         new_sol_i = right % len(child_sol.libraries)
         for i in range(len(child_sol.libraries)):
-            j = (i + right) % len(child_sol.libraries)
+            j = (i + right) % len(child_sol.libraries) #in order to wrap the list so we can continuously iterate it (connects the tail to the head of the list)
             if self.libraries[j].id not in (lib.id for lib in child_sol.libraries if lib != None):
                 child_sol.libraries[new_sol_i] = deepcopy(self.libraries[j])
                 new_sol_i += 1
@@ -146,6 +172,9 @@ class Solution:
 
     
     def __lt__(self, other):
+        """
+        Overload of the operator < in order to sort the libraries
+        """
         if self.score == None:
             self.eval()
         if other.score == None:
@@ -159,7 +188,7 @@ class Solution:
         """
         outfile = open(filename, mode="w")
 
-        outfile.write("uwu")
+        outfile.write("solution")
 
         # outfile.write(f"{self.libraries_used}\n")
 
@@ -173,18 +202,21 @@ class Solution:
 
 
     def eval(self) -> int:
-        
+        """
+        Evaluates the current solution taking into account the deadline and duplicate books
+        """
         books = set()
         t = 0
         for lib in self.libraries:
             t += lib.signup
-            if t >= self.problem.deadline:
+            if t >= self.problem.deadline: #once the libs are out of the deadline the function ends
                 break
             
             tleft = max((self.problem.deadline - t, 0))
-            max_books_scanned = min((lib.n_books, tleft * lib.processing))
+            max_books_scanned = min((lib.n_books, tleft * lib.processing)) #calculates how many books will be scanned from the lib
 
-            books.update(lib.books[:max_books_scanned])
+            #since we are using a set, if we try to insert a duplicate book, only one copy will remain
+            books.update(lib.books[:max_books_scanned]) 
 
         self.score = 0
         for book in books:
@@ -235,6 +267,9 @@ class Problem:
     
 
     def neighborhood(self, solution:Solution):
+        """
+        Used in steepest ascend to calculate the neighborhood
+        """
         t = 0
         for i in range(0, len(self.libraries)):
             t += self.libraries[i].signup
@@ -252,7 +287,7 @@ class Problem:
 
                 if t < self.deadline:
                     solution.eval()
-                    yield solution, ('sl', i, j)
+                    yield solution, ('sl', i, j) #similar to return, but restarts from here on the next call
 
                 # Undo swap       
                 t = prevT
@@ -262,6 +297,9 @@ class Problem:
 
     @timer
     def steepest_ascent(self) -> Solution:
+        """
+        Steepest Ascent is implemented however the time needed to complete is to long to be executed
+        """
         solution = self.solution_initializer(self).eval()
 
         while True:
@@ -279,29 +317,34 @@ class Problem:
 
             if self.verbose:
                 print(f"Best neighbour: {sol.score} -------- Op: {best_op}")
+        return solution
             
 
 
     @timer
     def hill_climb(self) -> Solution:
+        """
+        The simple version of hill climbing is implemented.
+        """
         solution = self.solution_initializer(self).eval()
 
-        flag = True
-        nextIter = False
+        flag = True #controls the while loop for the hill climb
+
         while flag:
             t=0
             for i in range(0, len(self.libraries)):
                 t+=self.libraries[i].signup
-                print(f"Time: {t}")
+
                 for j in range(i + 1, len(self.libraries)):
-                    # print(j)
-                    print(f"iter: {j}")
+      
                     prevScore = solution.score
                     index1, index2 = solution.swapLibs(i, j)
                     solution.eval()
 
                     prevT = t
-                    t = t - solution.libraries[index2].signup + solution.libraries[index1].signup
+
+                    #updates the time in accordance to the libs sawp
+                    t = t - solution.libraries[index2].signup + solution.libraries[index1].signup 
 
                     if prevScore >= solution.score or t > self.deadline:
                         # Undo swap       
@@ -312,12 +355,11 @@ class Problem:
                         
                         if self.verbose:
                             print(f"Found better solution {solution.score} on the lib swap {index1} -> {index2}")
-                if i == len(self.libraries) - 1:
+
+                if i == len(self.libraries) - 1: # if i is at the end, no more optimizations are possible and so the loop ends
                     flag = False
-                if nextIter:
-                    nextIter = False 
-                    break
-                if(t > self.deadline):
+                
+                if(t > self.deadline): #if we try to swap libraries that are out of the deadline, since it makes no difference we stop the loop
                     flag=False
                     break
         
@@ -342,7 +384,7 @@ class Problem:
     @timer
     def annealing(self, T:float, cooling:float) -> Solution:
         solution = self.solution_initializer(self).eval()
-        iteraciones = []
+        # iteraciones = []
         it = 0
         while T > .1:
 
@@ -374,15 +416,14 @@ class Problem:
                         solution.swapLibs(*op)
                     solution.score = prevScore
 
-            iteraciones.append((T, solution.score))
-            # print(f"Temp: {T}")
-        f = open("iteraciones.txt", 'w')
-        for T, _ in iteraciones:
-            f.write(f'{T} ')
-        f.write('\n')
-        for _, s in iteraciones:
-            f.write(f'{s} ')
-        f.close()
+            # iteraciones.append((T, solution.score))
+        # f = open("iteraciones.txt", 'w')
+        # for T, _ in iteraciones:
+        #     f.write(f'{T} ')
+        # f.write('\n')
+        # for _, s in iteraciones:
+        #     f.write(f'{s} ')
+        # f.close()
         if(self.verbose):
             print("Iterations:", it)
         return solution
@@ -398,19 +439,22 @@ class Problem:
 
     @timer
     def genetic(self, population:int, max_generations:int, reproduce=Solution.ox1) -> Solution:
-        parents = [Solution.fromRandom(self).eval() for i in range(population)]
-        half_population = 25
+        """
+        Genetic algorithm with variable max generation and staring gens poll
+        """
+        parents = [Solution.fromRandom(self).eval() for i in range(population)] #generates the starting population
+        half_population = population // 2
         generation = 0
 
         while generation < max_generations:
-            parents.sort(reverse=True)
+            parents.sort(reverse=True) #sorts the generation's solution os the worse can be replaced by the children
             children = copy(parents)
 
             for i in range(0, len(parents) // 2):
                 father = parents[i]
                 mother = random.choice(parents)
 
-                children[i + half_population] = reproduce(father, mother).eval()
+                children[i + half_population] = reproduce(father, mother).eval() #creates a child and replaces a solution from the previous generation
 
                 # Mutation
                 if 0.05 < random.random():
