@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import random
 from math import exp
 from decorators import timer
 from copy import copy, deepcopy
+
 
 class Library:
     """
@@ -72,7 +75,8 @@ class Solution:
 
         return self
 
-    def getDeadLineBooks(self) -> list:
+
+    def getDeadLineLibs(self) -> list:
         t = 0
         index = 0
         for lib in self.libraries:
@@ -80,11 +84,11 @@ class Solution:
             index += 1
             if t >= self.problem.deadline:
                 break
-        return self.libraries[:index]
+        return index
 
-    def swapLibs(self, index1: int = None, index2: int = None) -> (int, int):
+    def swapLibs(self, index1:int=None, index2:int=None) -> (int, int):
         if index1 == None:
-            index1 = random.randrange(len(self.getDeadLineBooks()))
+            index1 = random.randrange(self.getDeadLineLibs())
         if index2 == None:
             index2 = random.randrange(len(self.libraries))
             
@@ -93,7 +97,7 @@ class Solution:
 
     def swapBooks(self, libIndex:int=None, indexBook1:int=None, indexBook2:int=None) -> (int, int, int):
         if libIndex == None:
-            libIndex = random.randrange(len(self.getDeadLineBooks()))
+            libIndex = random.randrange(self.getDeadLineBooks())
         if indexBook1 == None:
             indexBook1 = random.randrange(self.libraries[libIndex].n_books)
         if indexBook2 == None:
@@ -118,7 +122,7 @@ class Solution:
 
 
     # Crossover operator
-    def ox1(self, other:Solution) -> Solution:
+    def ox1(self, other: Solution) -> Solution:
         left, right = random.randint(0, len(self.libraries)), random.randint(0, len(self.libraries))
         if right < left:
             right, left = left, right
@@ -177,9 +181,6 @@ class Solution:
             if t >= self.problem.deadline:
                 break
             
-            lib_t = t
-            processed = 0
-
             tleft = max((self.problem.deadline - t, 0))
             max_books_scanned = min((lib.n_books, tleft * lib.processing))
 
@@ -199,7 +200,7 @@ class Problem:
     Represents everything needed to represent and solve a book scanning problem
     """
 
-    def __init__(self, n_books, n_libraries, deadline, scores, libraries, books, solution_initializer=Solution.fromRandom, verbose=False):
+    def __init__(self, n_books:int, n_libraries:int, deadline:int, scores:list, libraries:list, books:list, solution_initializer=Solution.fromRandom, verbose:bool=False):
         super().__init__()
         # Input
         self.n_books = n_books
@@ -214,7 +215,7 @@ class Problem:
 
     @staticmethod
     @timer
-    def from_file(filename:str, solution_initializer=Solution.fromRandom, verbose:bool=False):
+    def from_file(filename:str, solution_initializer=Solution.fromRandom, verbose:bool=False) -> Problem:
         """
         Returns a new problem from a given input file
         """
@@ -233,7 +234,7 @@ class Problem:
             return Problem(n_books, n_libraries, deadline, scores, libraries, books, solution_initializer, verbose)
     
 
-    def neighborhood(self, solution: Solution):
+    def neighborhood(self, solution:Solution):
         t = 0
         for i in range(0, len(self.libraries)):
             t += self.libraries[i].signup
@@ -278,6 +279,7 @@ class Problem:
 
             if self.verbose:
                 print(f"Best neighbour: {sol.score} -------- Op: {best_op}")
+            
 
 
     @timer
@@ -290,16 +292,16 @@ class Problem:
             t=0
             for i in range(0, len(self.libraries)):
                 t+=self.libraries[i].signup
-
+                print(f"Time: {t}")
                 for j in range(i + 1, len(self.libraries)):
                     # print(j)
-
+                    print(f"iter: {j}")
                     prevScore = solution.score
                     index1, index2 = solution.swapLibs(i, j)
                     solution.eval()
 
                     prevT = t
-                    t = t - self.libraries[index2].signup + self.libraries[index1].signup
+                    t = t - solution.libraries[index2].signup + solution.libraries[index1].signup
 
                     if prevScore >= solution.score or t > self.deadline:
                         # Undo swap       
@@ -395,7 +397,7 @@ class Problem:
     # Output: the final state s
 
     @timer
-    def genetic(self, population:int, max_generations:int, reproduce = Solution.ox1) -> Solution:
+    def genetic(self, population:int, max_generations:int, reproduce=Solution.ox1) -> Solution:
         parents = [Solution.fromRandom(self).eval() for i in range(population)]
         half_population = 25
         generation = 0
