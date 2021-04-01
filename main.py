@@ -15,12 +15,14 @@ if args.hill:
 elif args.annealing:
     sol = p.annealing(T=args.annealing_temperature, initial_cooling=args.annealing_initial_cooling, final_cooling=args.annealing_final_cooling)
     print(f"Simulated Annealing Score: \t{sol.score}")
-elif args.gen:
-    sol = p.genetic(population=args.gen_population, max_generations=args.gen_generations)
+elif args.genetic:
+    sol = p.genetic(population=args.gen_population, max_generations=args.gen_generations, mutation_chance=args.gen_mutation_chance, reproduce=args.crossover_operator)
     print(f"Genetic Score: \t\t\t{sol.score}")
 
+
 sol.get_useful_solution()
-print(f"Real Score: \t\t\t{sol.score}")
+print(f"Real Score: \t\t\t{sol.real_score}")
+
 
 if args.dump:
     dumpfile = args.testfile.replace("test/", "sol/")

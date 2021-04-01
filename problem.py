@@ -33,7 +33,8 @@ class Solution:
     def __init__(self, problem: Problem):
         super().__init__()
         self.problem = problem
-        self.score = 0
+        self.score = 0  # Smaller or equal estimate of the score (from eval)
+        self.real_score = 0  # Best possible score (from get_useful_solution)
 
     @staticmethod
     def fromRandom(problem: Problem) -> Solution:
@@ -144,7 +145,6 @@ class Solution:
         """
         Cross over operator for our genetic algorithm
         """
-
         #Obtains two indexes from a parent to cross over to the child all the libs between them
         left, right = random.randint(0, len(self.libraries)), random.randint(0, len(self.libraries)) 
 
@@ -239,9 +239,9 @@ class Solution:
             else:
                 t -= lib.signup
     
-        self.score = 0
+        self.real_score = 0
         for book in books:
-            self.score += self.problem.scores[book]
+            self.real_score += self.problem.scores[book]
         
         return libraries, used_books
 
@@ -273,14 +273,14 @@ class Solution:
         t = 0
         for lib in self.libraries:
             t += lib.signup
-            if t >= self.problem.deadline: #once the libs are out of the deadline the function ends
+            if t >= self.problem.deadline:  # Once the libs are out of the deadline the function ends
                 break
-            
-            tleft = max((self.problem.deadline - t, 0))
-            max_books_scanned = min((lib.n_books, tleft * lib.processing)) #calculates how many books will be scanned from the lib
 
-            #since we are using a set, if we try to insert a duplicate book, only one copy will remain
-            books.update(lib.books[:max_books_scanned]) 
+            tleft = max((self.problem.deadline - t, 0))
+            max_books_scanned = min((lib.n_books, tleft * lib.processing))  # Calculates how many books will be scanned from the lib
+
+            # Since we are using a set, if we try to insert a duplicate book, only one copy will remain
+            books.update(lib.books[:max_books_scanned])
 
         self.score = 0
         for book in books:
@@ -392,6 +392,8 @@ class Problem:
         """
         solution = self.solution_initializer(self).eval()
 
+        print("REEEEEEE")
+
         flag = True #controls the while loop for the hill climb
 
         while flag:
@@ -498,7 +500,7 @@ class Problem:
     # Output: the final state s
 
     @timer
-    def genetic(self, population:int, max_generations:int, reproduce=Solution.singlePointCross) -> Solution:
+    def genetic(self, population:int, max_generations:int, mutation_chance:float, reproduce=Solution.singlePointCross) -> Solution:
         """
         Genetic algorithm with variable max generation and staring gens poll
         """
@@ -506,23 +508,26 @@ class Problem:
         half_population = population // 2
         generation = 0
 
+        parents.sort(reverse=True) #sorts the generation's solution os the worse can be replaced by the children
+        print(mutation_chance)
         while generation < max_generations:
-            parents.sort(reverse=True) #sorts the generation's solution os the worse can be replaced by the children
             children = copy(parents)
 
             for i in range(0, len(parents) // 2):
                 father = parents[i]
                 mother = random.choice(parents)
 
-                children[i + half_population] = reproduce(father, mother).eval() #creates a child and replaces a solution from the previous generation
+                children[i + half_population] = reproduce(father, mother) #creates a child and replaces a solution from the previous generation
 
                 # Mutation
-                if 0.05 < random.random():
+                if mutation_chance < random.random():
                     r = random.random()
                     if r > 0.2: # Switch Book
                         children[i + half_population].swapBooks()
                     else: # Switch Libraries
                         children[i + half_population].swapLibs()
+                
+                children[i + half_population].eval()
             
             # Sort list by libraries scores
             parents = children
@@ -536,5 +541,5 @@ class Problem:
         
             # for j in range(0,len(parents)//2):
             #     parents[len(parents) // 2 + j] = children[j]
-    
+
         return parents[0]
