@@ -5,11 +5,11 @@
 ### Required Software
 
 - Python 3.7 or above
-- Numpy and MatPlotLib modules ~ If you wish to plot the solution (`--plot`)
+- Numpy and MatPlotLib modules ~ Required only for plotting the solution (`--plot` flag)
 
 or
 
-- PyPy3 ~ For faster execution, cannot render plots
+- PyPy3 ~ Faster execution, cannot render plots however
 
 ### Execution
 
