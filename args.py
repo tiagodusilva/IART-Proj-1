@@ -32,7 +32,7 @@ def parse_args():
     parser.add_argument("-g", "--genetic", "--gen", action="store_true", help = "Use genetic algorithm")
     parser.add_argument("-gg", "--gen-generations", action="store", nargs=1, type=int, default=[100], help="Genetic algorithm ~ Number of generations")
     parser.add_argument("-gp", "--gen-population", action="store", nargs=1, type=int, default=[50], help="Genetic algorithm ~ Population size")
-    parser.add_argument("-gm", "--gen-mutation-chance", action="store", nargs=1, type=float, default=[0.05], help="Genetic algorithm ~ Mutation chance")
+    parser.add_argument("-gm", "--gen-mutation-chance", action="store", nargs=1, type=float, default=[0.025], help="Genetic algorithm ~ Mutation chance")
     parser.add_argument("-g1pc", "--gen-one-point-crossover", action="store_true", help="Genetic algorithm ~ One point crossover operator")
     parser.add_argument("-g2pc", "--gen-two-point-crossover", action="store_true", help="Genetic algorithm ~ Two point crossover operator (OX1)")
 

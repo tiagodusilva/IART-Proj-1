@@ -382,7 +382,7 @@ class Problem:
             if self.verbose:
                 print(f"Best neighbour: {sol.score} -------- Op: {best_op}")
         return solution
-            
+
 
 
     @timer
@@ -391,8 +391,6 @@ class Problem:
         The simple version of hill climbing is implemented.
         """
         solution = self.solution_initializer(self).eval()
-
-        print("REEEEEEE")
 
         flag = True #controls the while loop for the hill climb
 
@@ -509,7 +507,7 @@ class Problem:
         generation = 0
 
         parents.sort(reverse=True) #sorts the generation's solution os the worse can be replaced by the children
-        print(mutation_chance)
+
         while generation < max_generations:
             children = copy(parents)
 

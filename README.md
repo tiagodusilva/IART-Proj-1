@@ -13,13 +13,14 @@ or
 
 ### Execution
 
-You can run using either `python main.py` or `pypy main.py` followed by the required arguments. Use `-h` to show the parameters that are also shown below:
+You can run using either `python main.py` or `pypy3 main.py` followed by the required arguments. Use `-h` to show the parameters that are also shown below:
 
 ```
 usage: main.py [-h] [-v] [-t {a,b,c,d,e,f}] [-s SEED] [-p] [-d] [--hill] [-sa]
                [-sat ANNEALING_TEMPERATURE] [-saic ANNEALING_INITIAL_COOLING]
                [-safc ANNEALING_FINAL_COOLING] [-g] [-gg GEN_GENERATIONS]
-               [-gp GEN_POPULATION] [-rs] [-os] [-gs]
+               [-gp GEN_POPULATION] [-gm GEN_MUTATION_CHANCE] [-g1pc] [-g2pc]
+               [-rs] [-os] [-gs]
 ```
 ```
 Book Scanning ~ IART Proj 1 g42
@@ -42,11 +43,17 @@ optional arguments:
                         Simulated initial annealing cooling
   -safc ANNEALING_FINAL_COOLING, --annealing-final-cooling ANNEALING_FINAL_COOLING
                         Simulated final annealing cooling
-  -g, --gen, --genetic  Use genetic algorithm
+  -g, --genetic, --gen  Use genetic algorithm
   -gg GEN_GENERATIONS, --gen-generations GEN_GENERATIONS
                         Genetic algorithm ~ Number of generations
   -gp GEN_POPULATION, --gen-population GEN_POPULATION
                         Genetic algorithm ~ Population size
+  -gm GEN_MUTATION_CHANCE, --gen-mutation-chance GEN_MUTATION_CHANCE
+                        Genetic algorithm ~ Mutation chance
+  -g1pc, --gen-one-point-crossover
+                        Genetic algorithm ~ One point crossover operator
+  -g2pc, --gen-two-point-crossover
+                        Genetic algorithm ~ Two point crossover operator (OX1)
   -rs, --random-start   Sets the inital solution to random
   -os, --ordered-start  Sets the inital solution to books ordered by score
   -gs, --greedy-start   Sets the inital solution to greedy search
