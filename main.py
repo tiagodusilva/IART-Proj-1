@@ -34,4 +34,4 @@ if args.plot:
     import matplotlib.pyplot as plt
 
     fig, ax = plot_result(sol, args.testfile, show=True)
-    fig.savefig("uwu.png", dpi=200)
+    fig.savefig("solution_plot.png", dpi=200)
